@@ -28,8 +28,7 @@ setup(
             "Development Status :: 3 - Alpha",
             "Intended Audience :: Education",
             "Programming Language :: Python :: 3",
-            "Operating System :: MacOS :: MacOS X",
-            "Operating System :: Microsoft :: Windows",
+            "Operating System :: MacOS :: MacOS X"
         ]
 )
 
