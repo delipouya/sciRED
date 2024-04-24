@@ -2,7 +2,8 @@ import numpy as np
 import statsmodels.api as sm
 import time
 
-def fit_poisson_GLM(y, x) -> dict:
+def poissonGLM(y, x) -> dict:
+
     '''
     fit a Poisson GLM model to each gene of the data
     y: gene expression matrix, cells x genes
