@@ -98,20 +98,20 @@ def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     return covariate_list
 
 
-def get_design_mat(a_metadata_col, data) -> np.array:
+def get_design_mat(metadata_col, data) -> np.array:
     ''' return a onehot encoded design matrix for a given column of the dat object metadata
     a_metadata_col: a column of the dat object metadata
     data: AnnData object
     '''
     
-    column_levels = data.obs[a_metadata_col].unique() 
+    column_levels = data.obs[metadata_col].unique() 
     dict_covariate = {}
     for column_level in column_levels:
         print(column_level)
-        dict_covariate[column_level] = get_binary_covariate(data.obs[[a_metadata_col]].squeeze(), column_level)
+        dict_covariate[column_level] = get_binary_covariate(data.obs[[metadata_col]].squeeze(), column_level)
 
     #### stack colummns of dict_covariate 
-    x = np.column_stack((dict_covariate[column] for column in column_levels))
+    x = np.column_stack(([dict_covariate[column] for column in column_levels]))
     return x
 
 

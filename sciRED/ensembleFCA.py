@@ -78,7 +78,7 @@ def get_AUC_all_factors_alevel(factor_scores, a_binary_cov) -> list:
         wilcoxon_pvalue_alevel_factors.append(wilcoxon_pvalue)
     ### convert to numpy array
     AUC_alevel_factors = np.asarray(AUC_alevel_factors)
-    return AUC_alevel_factors, wilcoxon_pvalue_alevel_factors
+    return AUC_alevel_factors
 
 
 
@@ -204,7 +204,7 @@ def FCAT(covariate_vec, factor_scores,
         print('covariate_level: ', covariate_level)
 
         a_binary_cov = get_binary_covariate(covariate_vec, covariate_level)
-        importance_df_a_level = get_importance_df(factor_scores, a_binary_cov, time_eff=time_eff)[0]
+        importance_df_a_level = get_importance_df(factor_scores, a_binary_cov, time_eff=time_eff)
         mean_importance_a_level = get_mean_importance_level(importance_df_a_level, scale, mean)
 
         print('mean_importance_a_level:', mean_importance_a_level)

@@ -42,11 +42,11 @@ y = np.log(y+1e-10)
 #### fit GLM to each gene ######
 ####################################
 
-#### design matrix - library size only
+#### Design-1: design matrix - library size only
 x = proc.get_library_design_mat(data, lib_size='nCount_originalexp')
 
-#### design matrix - library size and sample
-x_protocol = proc.get_design_mat('protocol', data) 
+#### Design-2: design matrix - library size and sample
+x_protocol = proc.get_design_mat(metadata_col='protocol', data=data) 
 x = np.column_stack((data.obs.nCount_originalexp, x_protocol)) 
 x = sm.add_constant(x) ## adding the intercept
 
@@ -70,8 +70,7 @@ pca_loading.shape
 plt.plot(pca.explained_variance_ratio_)
 
 
-title = 'PCA of pearson residuals - reg: lib size/protocol'
-title = ''
+title = 'PCA of pearson residuals - lib size/protocol removed'
 ### make a dictionary of colors for each sample in y_sample
 vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
                cell_color_vec= colors_dict_scMix['cell_line'], 
@@ -87,29 +86,27 @@ vis.plot_pca(pca_scores, NUM_COMP_TO_VIS,
                plt_legend_list=plt_legend_protocol)
 
 
-
 #### plot the loadings of the factors
 vis.plot_factor_loading(pca_loading.T, genes, 0, 2, fontsize=10, 
                     num_gene_labels=2,
                     title='Scatter plot of the loading vectors', 
-                    label_x=False, label_y=False)
+                    label_x=True, label_y=True)
 
-vis.plot_umap(pca_scores, colors_dict_scMix['protocol'] , covariate='protocol', title='UMAP')
-vis.plot_umap(pca_scores, colors_dict_scMix['cell_line'] , covariate='cell_line',title='UMAP')
+vis.plot_umap(pca_scores, 
+              title='UMAP',
+              cell_color_vec= colors_dict_scMix['protocol'] , 
+               legend_handles=True,plt_legend_list=plt_legend_protocol)
 
 
-###################################################
-#### Matching between factors and covariates ######
-###################################################
-covariate_name = 'cell_line'#'cell_line'
-#factor_scores = pca_scores
-covariate_vector = y_cell_line
-y_cell_line.unique()
-covariate_level = 'HCC827'
+vis.plot_umap(pca_scores, 
+              title='UMAP',
+              cell_color_vec= colors_dict_scMix['cell_line'] , 
+               legend_handles=True,plt_legend_list=plt_legend_cell_line)
+
 
 
 ######## Applying varimax rotation to the factor scores
-rotation_results_varimax = rot.varimax_rotation(pca_loading.T)
+rotation_results_varimax = rot.varimax(pca_loading.T)
 varimax_loading = rotation_results_varimax['rotloading']
 pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
 
@@ -129,7 +126,7 @@ vis.plot_pca(pca_scores_varimax, num_pc,
 
 
 ######## Applying promax rotation to the factor scores
-rotation_results_promax = rot.promax_rotation(pca_loading.T)
+rotation_results_promax = rot.promax(pca_loading.T)
 promax_loading = rotation_results_promax['rotloading']
 pca_scores_promax = rot.get_rotated_scores(pca_scores, rotation_results_promax['rotmat'])
 vis.plot_pca(pca_scores_promax, 4, 
@@ -157,23 +154,23 @@ for i in range(pca_scores_varimax.shape[1]):
     for j in range(pca_scores_promax.shape[1]):
         factor_corr[i,j] = np.corrcoef(pca_scores_varimax[:,i], pca_scores_promax[:,j])[0,1]
 factor_corr_df = pd.DataFrame(factor_corr)
-### set the row and column names of factor_corr_df as 'F1', 'F2', ...
 factor_corr_df.index = ['F'+str(i+1) for i in range(pca_scores_varimax.shape[1])]
 factor_corr_df.columns = ['F'+str(i+1) for i in range(pca_scores_promax.shape[1])]
 factor_corr_df.head()
 factor_corr_df = factor_corr_df.iloc[0:15,0:15]
-### visualize teh factor_corr_df as a heatmap without a function
+
+
+### visualize the factor_corr_df as a heatmap without a function
 plt.figure(figsize=(15,12))
-### visualize the factor_corr_df factors 1 to 15
 plt.imshow(factor_corr_df, cmap='coolwarm')
-## set the x and y axis ticks labels as F1, F2, ...
 plt.xticks(np.arange(factor_corr_df.shape[1]), factor_corr_df.columns.values, rotation=90, fontsize=30)
 plt.yticks(np.arange(factor_corr_df.shape[0]), factor_corr_df.index.values, fontsize=30)
-
 plt.xlabel('Promax factors', fontsize=34)
 plt.ylabel('Varimax factors', fontsize=34)
 plt.title('Correlation between varimax and promax factors', fontsize=34)
+plt.colorbar()
 plt.show()
+
 
 ### calculate the correlation between varimax and promax factors 0 to 30 (diagnoal of the factor_corr_df)
 factor_corr_diag = np.zeros(pca_scores_varimax.shape[1])
@@ -197,60 +194,52 @@ factor_corr_df = pd.DataFrame(factor_corr)
 ### set the row and column names of factor_corr_df as 'F1', 'F2', ...
 factor_corr_df.index = ['F'+str(i+1) for i in range(pca_scores_varimax.shape[1])]
 factor_corr_df.columns = ['F'+str(i+1) for i in range(pca_scores.shape[1])]
-factor_corr_df.head()
 factor_corr_df = factor_corr_df.iloc[0:15,0:15]
-### visualize teh factor_corr_df as a heatmap without a function
+
+
 plt.figure(figsize=(15,12))
-### visualize the factor_corr_df factors 1 to 15
 plt.imshow(factor_corr_df, cmap='coolwarm')
-## set the x and y axis ticks labels as F1, F2, ...
 plt.xticks(np.arange(factor_corr_df.shape[1]), factor_corr_df.columns.values, rotation=90, fontsize=30)
 plt.yticks(np.arange(factor_corr_df.shape[0]), factor_corr_df.index.values, fontsize=30)
 plt.xlabel('PCA factors', fontsize=34)
 plt.ylabel('Varimax factors', fontsize=34)
 plt.title('Correlation between varimax and PCA factors', fontsize=34)
+plt.colorbar()
+plt.show()
 
+###################################################
+####  Factors and covariate association ######
+###################################################
 
-####################################
-#### Matching between factors and covariates ######
-####################################
-covariate_name = 'protocol'#'cell_line'
-covariate_level = b'Dropseq'
-covariate_vector = y_protocol
-
-########################
+#### Experiment-1: PCA factors
 factor_loading = pca_loading
 factor_scores = pca_scores
-########################
 
-
-########################
+##### Experiment-2: Varimax factors
 factor_loading = rotation_results_varimax['rotloading']
 factor_scores = pca_scores_varimax
 
-
-########################
+##### Experiment-3: Promax factors
 factor_loading = rotation_results_promax['rotloading']
 factor_scores = pca_scores_promax
 
-
 ####################################
-#### Mean Importance score
+#### FCAT score calculation ######
 ####################################
 
-### calculate the mean importance of each covariate level
-mean_importance_df_protocol = efca.get_mean_importance_all_levels(y_protocol, factor_scores, scale='standard', mean='arithmatic')
-mean_importance_df_cell_line = efca.get_mean_importance_all_levels(y_cell_line, factor_scores, scale='standard', mean='arithmatic')
+### FCAT needs to be calculated for each covariate separately
+FCAT_protocol = efca.FCAT(covariate_vec=y_protocol, factor_scores=factor_scores, scale='standard', mean='arithmatic')
+FCAT_cell_line = efca.FCAT(y_cell_line, factor_scores, scale='standard', mean='arithmatic')
 
-### concatenate mean_importance_df_protocol and mean_importance_df_cell_line
-mean_importance_df = pd.concat([mean_importance_df_protocol, mean_importance_df_cell_line], axis=0)
-mean_importance_df.shape
-vis.FCAT(mean_importance_df, title='F-C Match: Feature importance scores', 
+### concatenate FCAT table for protocol and cell line
+FCAT = pd.concat([FCAT_protocol, FCAT_cell_line], axis=0)
+FCAT.shape
+vis.plot_all_factors_levels_df(FCAT, title='F-C Match: Feature importance scores', 
                                  color='coolwarm',x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
                                x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
 ### only visualize teh first 15 factors
-fplot.plot_all_factors_levels_df(mean_importance_df.iloc[:,0:15],
+vis.plot_all_factors_levels_df(mean_importance_df.iloc[:,0:15],
                                     title='', 
                                     color='coolwarm',x_axis_fontsize=35, y_axis_fontsize=35, title_fontsize=35,
                                 x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)

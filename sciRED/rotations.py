@@ -5,7 +5,7 @@ from scipy.linalg import svd
 from numpy.linalg import LinAlgError
 
 ####  python implementation of base R varimax function
-def varimax_rotation(x, normalize=True, eps=1e-05):
+def varimax(x, normalize=True, eps=1e-05):
     '''
     varimax rotation
     x: the factor loading matrix
@@ -43,7 +43,7 @@ def varimax_rotation(x, normalize=True, eps=1e-05):
 
 
 ####  python implementation of base R promax function
-def promax_rotation(x, m=4, normalize=True, eps=1e-05):
+def promax(x, m=4, normalize=True, eps=1e-05):
     '''
     promax rotation
     x: the factor loading matrix
@@ -56,7 +56,7 @@ def promax_rotation(x, m=4, normalize=True, eps=1e-05):
         return x
     
     # Varimax rotation
-    xx = varimax_rotation(x, normalize)
+    xx = varimax(x, normalize)
     x = xx['rotloading']
     
     # Calculate Q matrix

@@ -127,7 +127,8 @@ def plot_factor_loading(factor_loading, genes, x_i, y_i, fontsize=6, num_gene_la
             
 
 
-def plot_umap(pca_scores, cell_color_vec, covariate=None,plt_legend_dict=None,
+def plot_umap(pca_scores, cell_color_vec, legend_handles=False,
+                   plt_legend_list = None,
                     title='UMAP of the PC components of the gene expression matrix') -> None:
 
     ### apply UMAP to teh PCA components
