@@ -8,7 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 
-from exutils import preprocess as exproc
+from exutils import ex_preprocess as exproc
+from exutils import ex_visualize as exviz
 
 from sciRED import ensembleFCA as efca
 from sciRED import glm as glm
@@ -16,7 +17,7 @@ from sciRED import rotations as rot
 from sciRED.utils import preprocess as proc
 
 
-import functions_plotting as fplot
+
 
 np.random.seed(10)
 

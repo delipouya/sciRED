@@ -8,55 +8,49 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 
-from exutils import preprocess as exproc
-
 from sciRED import ensembleFCA as efca
 from sciRED import glm
 from sciRED import rotations as rot
 from sciRED.utils import preprocess as proc
-
-
-import functions_plotting as fplot
+from sciRED.utils import visualize as vis
+from exutils import ex_preprocess as exproc
+from exutils import ex_visualize as exvis
 
 np.random.seed(10)
-
+NUM_COMPONENTS = 30
+NUM_GENES = 2000
+NUM_COMP_TO_VIS = 5
 
 data_file_path = '/home/delaram/sciFA/Data/scMix_3cl_merged.h5ad'
 data = exproc.import_AnnData(data_file_path)
-data, gene_idx = proc.get_sub_data(data, num_genes=2000) # subset the data to num_genes HVGs
+data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data to num_genes HVGs
 y, genes, num_cells, num_genes = proc.get_data_array(data)
 y_cell_line, y_sample, y_protocol = exproc.get_metadata_scMix(data)
 data.obs['protocol'] = y_protocol.to_numpy()
 data.obs['cell_line'] = y_cell_line.to_numpy()
 data.obs['sample'] = y_sample.to_numpy()
 
-colors_dict_scMix = fplot.get_colors_dict_scMix(y_protocol, y_cell_line)
-
-plt_legend_cell_line = fplot.get_legend_patch(y_cell_line, colors_dict_scMix['cell_line'] )
-plt_legend_protocol = fplot.get_legend_patch(y_sample, colors_dict_scMix['protocol'] )
+colors_dict_scMix = exvis.get_colors_dict_scMix(y_protocol, y_cell_line)
+plt_legend_cell_line = exvis.get_legend_patch(y_cell_line, colors_dict_scMix['cell_line'] )
+plt_legend_protocol = exvis.get_legend_patch(y_sample, colors_dict_scMix['protocol'] )
 
 
 ############## log normalizing the data
-np.sum(y==0)
-### replace the zeros with 1e-10 and take the log
 y = np.log(y+1e-10)
-### check if there are any nan values in y
-np.sum(np.isnan(y))
-
 
 ####################################
 #### fit GLM to each gene ######
 ####################################
 
 #### design matrix - library size only
-x = exproc.get_lib_designmat(data, lib_size='nCount_originalexp')
+x = proc.get_library_design_mat(data, lib_size='nCount_originalexp')
 
 #### design matrix - library size and sample
-x_protocol = exproc.get_design_mat('protocol', data) 
+x_protocol = proc.get_design_mat('protocol', data) 
 x = np.column_stack((data.obs.nCount_originalexp, x_protocol)) 
 x = sm.add_constant(x) ## adding the intercept
 
-glm_fit_dict = glm.fit_poisson_GLM(y, x)
+glm_fit_dict = glm.poissonGLM(y, x)
 resid_pearson = glm_fit_dict['resid_pearson'] 
 print('pearson residuals: ', resid_pearson.shape) # numpy array of shape (num_genes, num_cells)
 print('y shape: ', y.shape) # (num_cells, num_genes)
@@ -68,25 +62,25 @@ print('y shape: ', y.shape) # (num_cells, num_genes)
 ################################################
 
 ### using pipeline to scale the gene expression data first
-pipeline = Pipeline([('scaling', StandardScaler()), ('pca', PCA(n_components=const.num_components))])
+pipeline = Pipeline([('scaling', StandardScaler()), ('pca', PCA(n_components=NUM_COMPONENTS))])
 pca_scores = pipeline.fit_transform(y)
 pca = pipeline.named_steps['pca']
 pca_loading = pca.components_
 pca_loading.shape
 plt.plot(pca.explained_variance_ratio_)
 
-num_pc = 5
+
 title = 'PCA of pearson residuals - reg: lib size/protocol'
 title = ''
 ### make a dictionary of colors for each sample in y_sample
-fplot.plot_pca(pca_scores, num_pc, 
+vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
                cell_color_vec= colors_dict_scMix['cell_line'], 
                legend_handles=True,
                title=title,
                plt_legend_list=plt_legend_cell_line)
 
 ### make a dictionary of colors for each sample in y_sample
-fplot.plot_pca(pca_scores, num_pc, 
+vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
                cell_color_vec= colors_dict_scMix['protocol'], 
                legend_handles=True,
                title=title,
@@ -95,13 +89,13 @@ fplot.plot_pca(pca_scores, num_pc,
 
 
 #### plot the loadings of the factors
-fplot.plot_factor_loading(pca_loading.T, genes, 0, 2, fontsize=10, 
+vis.plot_factor_loading(pca_loading.T, genes, 0, 2, fontsize=10, 
                     num_gene_labels=2,
                     title='Scatter plot of the loading vectors', 
                     label_x=False, label_y=False)
 
-fplot.plot_umap_scMix(pca_scores, colors_dict_scMix['protocol'] , covariate='protocol', title='UMAP')
-fplot.plot_umap_scMix(pca_scores, colors_dict_scMix['cell_line'] , covariate='cell_line',title='UMAP')
+vis.plot_umap(pca_scores, colors_dict_scMix['protocol'] , covariate='protocol', title='UMAP')
+vis.plot_umap(pca_scores, colors_dict_scMix['cell_line'] , covariate='cell_line',title='UMAP')
 
 
 ###################################################
@@ -121,13 +115,13 @@ pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax
 
 title = 'Varimax PCA of pearson residuals '
 num_pc=5
-fplot.plot_pca(pca_scores_varimax, num_pc, 
+vis.plot_pca(pca_scores_varimax, num_pc, 
                cell_color_vec= colors_dict_scMix['protocol'], 
                legend_handles=True,
                title=title,
                plt_legend_list=plt_legend_protocol)
 
-fplot.plot_pca(pca_scores_varimax, num_pc, 
+vis.plot_pca(pca_scores_varimax, num_pc, 
                cell_color_vec= colors_dict_scMix['cell_line'], 
                legend_handles=True,
                title=title,
@@ -138,13 +132,13 @@ fplot.plot_pca(pca_scores_varimax, num_pc,
 rotation_results_promax = rot.promax_rotation(pca_loading.T)
 promax_loading = rotation_results_promax['rotloading']
 pca_scores_promax = rot.get_rotated_scores(pca_scores, rotation_results_promax['rotmat'])
-fplot.plot_pca(pca_scores_promax, 4, 
+vis.plot_pca(pca_scores_promax, 4, 
                cell_color_vec= colors_dict_scMix['protocol'], 
                legend_handles=True,
                title='Promax PCA of pearson residuals ',
                plt_legend_list=plt_legend_protocol)
 
-fplot.plot_pca(pca_scores_promax, 4, 
+vis.plot_pca(pca_scores_promax, 4, 
                cell_color_vec= colors_dict_scMix['cell_line'], 
                legend_handles=True,
                title='Promax PCA of pearson residuals ',
@@ -152,7 +146,7 @@ fplot.plot_pca(pca_scores_promax, 4,
 
 
 #### plot the loadings of the factors
-fplot.plot_factor_loading(varimax_loading, genes, 0, 4, fontsize=10, 
+vis.plot_factor_loading(varimax_loading, genes, 0, 4, fontsize=10, 
                     num_gene_labels=6,title='Scatter plot of the loading vectors', 
                     label_x=False, label_y=False)
 
@@ -251,8 +245,7 @@ mean_importance_df_cell_line = efca.get_mean_importance_all_levels(y_cell_line, 
 ### concatenate mean_importance_df_protocol and mean_importance_df_cell_line
 mean_importance_df = pd.concat([mean_importance_df_protocol, mean_importance_df_cell_line], axis=0)
 mean_importance_df.shape
-fplot.plot_all_factors_levels_df(mean_importance_df, 
-                                 title='F-C Match: Feature importance scores', 
+vis.FCAT(mean_importance_df, title='F-C Match: Feature importance scores', 
                                  color='coolwarm',x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
                                x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 

@@ -116,7 +116,7 @@ def get_design_mat(a_metadata_col, data) -> np.array:
 
 
 
-def get_lib_designmat(data, lib_size='nCount_RNA'): # nCount_originalexp for scMixology
+def get_library_design_mat(data, lib_size='nCount_RNA'): # nCount_originalexp for scMixology
     ''' return a design matrix for the library size covariate - equivalent to performing normalization
     data: AnnData object
     lib_size: the library size covariate name in the AnnData object
