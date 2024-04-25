@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 from exutils import preprocess as exproc
 
 from sciRED import ensembleFCA as efca
-from sciRED import glm as glm
+from sciRED import glm
 from sciRED import rotations as rot
 from sciRED.utils import preprocess as proc
 
@@ -23,7 +23,7 @@ np.random.seed(10)
 
 data_file_path = '/home/delaram/sciFA/Data/scMix_3cl_merged.h5ad'
 data = exproc.import_AnnData(data_file_path)
-data, gene_idx = proc.get_sub_data(data, random=False) # subset the data to num_genes HVGs
+data, gene_idx = proc.get_sub_data(data, num_genes=2000) # subset the data to num_genes HVGs
 y, genes, num_cells, num_genes = proc.get_data_array(data)
 y_cell_line, y_sample, y_protocol = exproc.get_metadata_scMix(data)
 data.obs['protocol'] = y_protocol.to_numpy()
