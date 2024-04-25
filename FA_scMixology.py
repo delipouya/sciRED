@@ -13,8 +13,10 @@ from sciRED import glm
 from sciRED import rotations as rot
 from sciRED.utils import preprocess as proc
 from sciRED.utils import visualize as vis
+from sciRED import utils
 from exutils import ex_preprocess as exproc
 from exutils import ex_visualize as exvis
+
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
@@ -159,8 +161,6 @@ factor_corr_df.columns = ['F'+str(i+1) for i in range(pca_scores_promax.shape[1]
 factor_corr_df.head()
 factor_corr_df = factor_corr_df.iloc[0:15,0:15]
 
-
-### visualize the factor_corr_df as a heatmap without a function
 plt.figure(figsize=(15,12))
 plt.imshow(factor_corr_df, cmap='coolwarm')
 plt.xticks(np.arange(factor_corr_df.shape[1]), factor_corr_df.columns.values, rotation=90, fontsize=30)
@@ -176,7 +176,6 @@ plt.show()
 factor_corr_diag = np.zeros(pca_scores_varimax.shape[1])
 for i in range(pca_scores_varimax.shape[1]):
     factor_corr_diag[i] = np.corrcoef(pca_scores_varimax[:,i], pca_scores_promax[:,i])[0,1]
-### show the histogram of the factor_corr_diag
 plt.figure(figsize=(10,5))
 plt.hist(factor_corr_diag, bins=20)
 plt.xlabel('Correlation between varimax and promax factors', fontsize=20)
@@ -191,7 +190,6 @@ for i in range(pca_scores_varimax.shape[1]):
     for j in range(pca_scores.shape[1]):
         factor_corr[i,j] = np.corrcoef(pca_scores_varimax[:,i], pca_scores[:,j])[0,1]
 factor_corr_df = pd.DataFrame(factor_corr)
-### set the row and column names of factor_corr_df as 'F1', 'F2', ...
 factor_corr_df.index = ['F'+str(i+1) for i in range(pca_scores_varimax.shape[1])]
 factor_corr_df.columns = ['F'+str(i+1) for i in range(pca_scores.shape[1])]
 factor_corr_df = factor_corr_df.iloc[0:15,0:15]
@@ -228,95 +226,58 @@ factor_scores = pca_scores_promax
 ####################################
 
 ### FCAT needs to be calculated for each covariate separately
-FCAT_protocol = efca.FCAT(covariate_vec=y_protocol, factor_scores=factor_scores, scale='standard', mean='arithmatic')
-FCAT_cell_line = efca.FCAT(y_cell_line, factor_scores, scale='standard', mean='arithmatic')
+fcat_protocol = efca.FCAT(y_protocol, factor_scores, scale='standard', mean='arithmatic')
+fcat_cell_line = efca.FCAT(y_cell_line, factor_scores, scale='standard', mean='arithmatic')
 
 ### concatenate FCAT table for protocol and cell line
-FCAT = pd.concat([FCAT_protocol, FCAT_cell_line], axis=0)
-FCAT.shape
-vis.plot_all_factors_levels_df(FCAT, title='F-C Match: Feature importance scores', 
-                                 color='coolwarm',x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
-                               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
+fcat = pd.concat([fcat_protocol, fcat_cell_line], axis=0)
+fcat.shape
+vis.plot_FCAT(fcat, title='', color='coolwarm',
+              x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
+              x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
 ### only visualize teh first 15 factors
-vis.plot_all_factors_levels_df(mean_importance_df.iloc[:,0:15],
-                                    title='', 
-                                    color='coolwarm',x_axis_fontsize=35, y_axis_fontsize=35, title_fontsize=35,
-                                x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
+vis.plot_FCAT(fcat.iloc[:,0:15],title='', color='coolwarm',x_axis_fontsize=35, 
+              y_axis_fontsize=35, title_fontsize=35,
+              x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
-## getting rownnammes of the mean_importance_df
-all_covariate_levels = mean_importance_df.index.values
+## getting rownnammes of the FCAT table
+all_covariate_levels = fcat.index.values
 
-##### Define global metrics for how well a factor analysis works on a dataset 
-#### given a threshold for the feature importance scores, calculate the percentage of the factors that are matched with any covariate level
-### plot the histogram of all the values in mean importance scores
-fplot.plot_histogram(mean_importance_df.values.flatten(), xlabel='Feature importance scores',
-                     title='F-C Match: Feature importance scores') 
+vis.plot_histogram(fcat.values.flatten(), 
+                   xlabel='Factor-Covariate Association scores',
+                     title='FCAT score distribution') 
 
-### choosing a threshold for the feature importance scores
+### using Otsu's method to calculate the threshold
+threshold = efca.get_otsu_threshold(fcat.values.flatten())
 
-threshold = 0.3
-threshold = efca.get_otsu_threshold(mean_importance_df.values.flatten())
+vis.plot_histogram(fcat.values.flatten(),
+                   xlabel='Factor-Covariate Association scores',
+                   title='FCAT score distribution',
+                   threshold=threshold)
 
-fplot.plot_histogram(mean_importance_df.values.flatten(), xlabel='Feature importance scores',
-                        title='F-C Match: Feature importance scores', threshold=threshold)
-
-matched_factor_dist, percent_matched_fact = efca.get_percent_matched_factors(mean_importance_df, threshold)
-matched_covariate_dist, percent_matched_cov = efca.get_percent_matched_covariate(mean_importance_df, threshold=threshold)
+matched_factor_dist, percent_matched_fact = efca.get_percent_matched_factors(fcat, threshold)
+matched_covariate_dist, percent_matched_cov = efca.get_percent_matched_covariate(fcat, threshold=threshold)
 
 print('percent_matched_fact: ', percent_matched_fact)
 print('percent_matched_cov: ', percent_matched_cov)
-fplot.plot_matched_factor_dist(matched_factor_dist)
-fplot.plot_matched_covariate_dist(matched_covariate_dist, covariate_levels=all_covariate_levels)
-
+vis.plot_matched_factor_dist(matched_factor_dist)
+vis.plot_matched_covariate_dist(matched_covariate_dist, 
+                                covariate_levels=all_covariate_levels)
 
 
 ### select the factors that are matched with any covariate level
 matched_factor_index = np.where(matched_factor_dist>0)[0] 
-### subset mean_importance_df to the matched factors
-mean_importance_df_matched = mean_importance_df.iloc[:,matched_factor_index] 
-## subset x axis labels based on het matched factors
-x_labels_matched = mean_importance_df_matched.columns.values
-
-fplot.plot_all_factors_levels_df(mean_importance_df_matched, x_axis_label=x_labels_matched,
-                                 title='F-C Match: Feature importance scores', color='coolwarm')
-
-#### calculate the correlation of factors with library size
-def get_factor_libsize_correlation(factor_scores, library_size):
-    factor_libsize_correlation = np.zeros(factor_scores.shape[1])
-    for i in range(factor_scores.shape[1]):
-        factor_libsize_correlation[i] = np.corrcoef(factor_scores[:,i], library_size)[0,1]
-    return factor_libsize_correlation
-
-library_size = data.obs.nCount_originalexp
-factor_libsize_correlation = get_factor_libsize_correlation(factor_scores, library_size)
-### create a barplot of the factor_libsize_correlation
-
-def plot_barplot(factor_libsize_correlation, x_labels=None, title=''):
-    plt.figure(figsize=(15,5))
-    if x_labels is None:
-        ### set the x axis labels as F1, F2, ...
-        x_labels = ['F'+str(i+1) for i in range(factor_libsize_correlation.shape[0])]
-    ### set background color to white
-    plt.rcParams['axes.facecolor'] = 'white'
-    ## add y and x black axis 
-    plt.axhline(y=0, color='black', linewidth=2)
-    plt.bar(x_labels, factor_libsize_correlation, color='black')
-    ## set y range from 0 to 1
-    plt.ylim(-0.5,1)
-    plt.xticks(fontsize=25, rotation=90)
-    plt.yticks(fontsize=25)
-    plt.xlabel('Factors', fontsize=28)
-    plt.ylabel('Correlation with library size', fontsize=28)
-    plt.title(title, fontsize=26)
-    plt.show()
-
-plot_barplot(factor_libsize_correlation, 
-             title='Correlation of factors with library size')
+fcat_matched = fcat.iloc[:,matched_factor_index] 
+x_labels_matched = fcat_matched.columns.values
+vis.plot_FCAT(fcat_matched, x_axis_label=x_labels_matched, title='', color='coolwarm')
 
 
-
-
+factor_libsize_correlation = utils.corr.get_factor_libsize_correlation(factor_scores, 
+                                                                       library_size = data.obs.nCount_originalexp)
+vis.plot_factor_cor_barplot(factor_libsize_correlation, 
+             title='Correlation of factors with library size', 
+             y_label='Correlation', x_label='Factors')
 
 
 
