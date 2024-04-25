@@ -43,10 +43,6 @@ def plot_pca(pca_scores,
 
             else:
                 plt.legend(handles=plt_legend_list)
-
-
-
-        
         
         plt.show()
 
