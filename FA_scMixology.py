@@ -39,7 +39,7 @@ plt_legend_cell_line = exvis.get_legend_patch(y_cell_line, colors_dict_scMix['ce
 plt_legend_protocol = exvis.get_legend_patch(y_sample, colors_dict_scMix['protocol'] )
 
 
-############## log normalizing the data
+############## log normalizing the data (optional - for comparison)
 y = np.log(y+1e-10)
 
 ####################################
@@ -115,14 +115,14 @@ varimax_loading = rotation_results_varimax['rotloading']
 pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
 
 title = 'Varimax PCA of pearson residuals '
-num_pc=5
-vis.plot_pca(pca_scores_varimax, num_pc, 
+
+vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
                cell_color_vec= colors_dict_scMix['protocol'], 
                legend_handles=True,
                title=title,
                plt_legend_list=plt_legend_protocol)
 
-vis.plot_pca(pca_scores_varimax, num_pc, 
+vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
                cell_color_vec= colors_dict_scMix['cell_line'], 
                legend_handles=True,
                title=title,
@@ -300,7 +300,7 @@ asv_cell_line = met.average_scaled_var(factor_scores, covariate_vector=y_cell_li
 asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
 
 
-########### create FIST table
+########### create factor-interpretibility score table (FIST) ######
 metrics_dict = {'Bimodality':bimodality_score, 
                     'Specificity':simpson_fcat,
                     'Effect size': factor_variance,

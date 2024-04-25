@@ -356,3 +356,24 @@ def plot_FIST(fist, x_axis_label=None, annot=True,
         plt.savefig(save_path, bbox_inches='tight')
     plt.show()
 
+
+
+
+def plot_sorted_factor_FCA_scores(fcat, covariate_level, title='Sorted association scores for '):
+    """
+    bar plot of the sorted factor association scores for a covariate level
+
+    fcat: pandas dataframe of FCAT scores
+    a_cov_level: a covariate level name (a fcat dataframe rowname)
+    title: title of the plot
+    """
+    x_labels = fcat.columns.values
+    plt.figure(figsize=(12,5))
+    a_cov_level_score = fcat.loc[covariate_level,:]
+    a_cov_level_score_sorted, x_labels_sorted = zip(*sorted(zip(a_cov_level_score, x_labels), reverse=True))
+    plt.bar(x_labels_sorted, a_cov_level_score_sorted)
+    plt.title(title+covariate_level, fontsize=20)
+    plt.xticks(rotation=90, fontsize=18)
+    plt.yticks(fontsize=23)
+    plt.show()
+    return a_cov_level_score_sorted, x_labels_sorted
