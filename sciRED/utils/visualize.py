@@ -315,3 +315,44 @@ def plot_factor_cor_barplot(factor_libsize_correlation,
     plt.ylabel(y_label, fontsize=28)
     plt.title(title, fontsize=26)
     plt.show()
+
+
+
+
+def plot_FIST(fist, x_axis_label=None, annot=True,
+                           title='Scaled factor interpretibility scores', xticks_fontsize=30,
+                           yticks_fontsize=30, legend_fontsize=25, save=False, 
+                           save_path='./file.pdf') -> None:
+    '''
+    plot the heatmap of the scaled factor metrics for all the factors using seaborn
+    all_metrics_scaled: the scaled factor metrics for all the factors
+    factor_metrics: the list of factor metric names
+    '''
+    sns.set(font_scale=1.4)
+    plt.figure(figsize=(fist.shape[1]+2, fist.shape[0]+2))
+    #all_metrics_np = all_metrics_df.T.to_numpy()
+    
+    g = sns.clustermap(fist.T, cmap='YlGnBu', 
+                    figsize=(fist.shape[0]+3, fist.shape[1]+2),  #viridis, coolwarm
+                            linewidths=.5, linecolor='white', annot=annot, fmt='.2f',cbar=True,
+                            col_cluster=False, row_cluster=False) # annot=False, fmt='.4g'  
+    
+    
+    ## increease fint size of the legend bar
+    cbar = g.ax_heatmap.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=legend_fontsize)
+    cbar.ax.yaxis.label.set_size(legend_fontsize)
+
+    plt.setp(g.ax_heatmap.get_xticklabels(),rotation=40, ha="right", fontsize = xticks_fontsize)
+    plt.setp(g.ax_heatmap.get_yticklabels(), rotation=0, fontsize = yticks_fontsize)
+
+    ## add F1, F2, ... to the heatmap x axis
+    if x_axis_label is None:
+         x_axis_label = ['F'+str(i) for i in range(1, fist.shape[0]+1)]
+    g.ax_heatmap.set_xticklabels(x_axis_label)
+    g.ax_heatmap.set_yticklabels(list(fist.columns))
+    
+    if save:
+        plt.savefig(save_path, bbox_inches='tight')
+    plt.show()
+

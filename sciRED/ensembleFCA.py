@@ -222,7 +222,7 @@ def get_percent_matched_factors(mean_importance_df, threshold) -> float:
       return matched_factor_dist, percent_matched
 
 
-def get_percent_matched_covariate(mean_importance_df, threshold) -> float:
+def get_percent_matched_covariates(mean_importance_df, threshold) -> float:
       total_num_covariates = mean_importance_df.shape[0]
       matched_covariate_dist = np.sum(mean_importance_df > threshold, axis=1)
 

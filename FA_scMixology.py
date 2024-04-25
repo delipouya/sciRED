@@ -11,9 +11,11 @@ from sklearn.pipeline import Pipeline
 from sciRED import ensembleFCA as efca
 from sciRED import glm
 from sciRED import rotations as rot
+from sciRED import metrics as met
+
 from sciRED.utils import preprocess as proc
 from sciRED.utils import visualize as vis
-from sciRED import utils
+from sciRED.utils import corr
 from exutils import ex_preprocess as exproc
 from exutils import ex_visualize as exvis
 
@@ -236,12 +238,12 @@ vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
-### only visualize teh first 15 factors
+### visualize the first 15 factors
 vis.plot_FCAT(fcat.iloc[:,0:15],title='', color='coolwarm',x_axis_fontsize=35, 
               y_axis_fontsize=35, title_fontsize=35,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
-## getting rownnammes of the FCAT table
+## rownames of the FCAT table
 all_covariate_levels = fcat.index.values
 
 vis.plot_histogram(fcat.values.flatten(), 
@@ -257,7 +259,7 @@ vis.plot_histogram(fcat.values.flatten(),
                    threshold=threshold)
 
 matched_factor_dist, percent_matched_fact = efca.get_percent_matched_factors(fcat, threshold)
-matched_covariate_dist, percent_matched_cov = efca.get_percent_matched_covariate(fcat, threshold=threshold)
+matched_covariate_dist, percent_matched_cov = efca.get_percent_matched_covariates(fcat, threshold=threshold)
 
 print('percent_matched_fact: ', percent_matched_fact)
 print('percent_matched_cov: ', percent_matched_cov)
@@ -273,128 +275,40 @@ x_labels_matched = fcat_matched.columns.values
 vis.plot_FCAT(fcat_matched, x_axis_label=x_labels_matched, title='', color='coolwarm')
 
 
-factor_libsize_correlation = utils.corr.get_factor_libsize_correlation(factor_scores, 
-                                                                       library_size = data.obs.nCount_originalexp)
+factor_libsize_correlation = corr.get_factor_libsize_correlation(factor_scores, library_size = data.obs.nCount_originalexp)
 vis.plot_factor_cor_barplot(factor_libsize_correlation, 
              title='Correlation of factors with library size', 
              y_label='Correlation', x_label='Factors')
 
 
 
+
 ####################################
-#### evaluating bimodality score using simulated factors ####
-####################################
+#### Bimodality scores
+silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
+bimodality_index = met.bimodality_index(factor_scores)
+bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
 
-#bic_scores_km, calinski_harabasz_scores_km, davies_bouldin_scores_km, silhouette_scores_km,\
-#      vrs_km, wvrs_km = fmet.get_kmeans_scores(factor_scores, time_eff=False)
-#bic_scores_gmm, silhouette_scores_gmm, vrs_gmm, wvrs_gmm = fmet.get_gmm_scores(factor_scores, time_eff=False)
+#### Effect size
+factor_variance = met.factor_variance(factor_scores)
 
-silhouette_scores_km, vrs_km = fmet.get_kmeans_scores(factor_scores, time_eff=True)
-# silhouette_scores_gmm = fmet.get_gmm_scores(factor_scores, time_eff=True)
-bimodality_index_scores = fmet.get_bimodality_index_all(factor_scores)
-bimodality_scores = bimodality_index_scores
-### calculate the average between the silhouette_scores_km, vrs_km and bimodality_index_scores
-bimodality_scores = np.mean([silhouette_scores_km, bimodality_index_scores], axis=0)
-
+## Specificity
+simpson_fcat = met.simpson_diversity_index(fcat)
 
 ### label dependent factor metrics
-ASV_arith_cell = fmet.get_ASV_all(factor_scores, covariate_vector=y_cell_line, mean_type='arithmetic')
-ASV_arith_sample = fmet.get_ASV_all(factor_scores, y_sample, mean_type='arithmetic')
-
-meanimp_simpson = fmet.get_all_factors_simpson_D_index(mean_importance_df)
+asv_cell_line = met.average_scaled_var(factor_scores, covariate_vector=y_cell_line, mean_type='arithmetic')
+asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
 
 
-### calculate diversity metrics
-## simpson index: High scores (close to 1) indicate high diversity - meaning that the factor is not specific to any covariate level
-## low simpson index (close to 0) indicate low diversity - meaning that the factor is specific to a covariate level
-factor_simpson_meanimp = fmet.get_all_factors_simpson(mean_importance_df) ## calculated for each factor in the importance matrix
+########### create FIST table
+metrics_dict = {'Bimodality':bimodality_score, 
+                    'Specificity':simpson_fcat,
+                    'Effect size': factor_variance,
+                    'Homogeneity (cell line)':asv_cell_line,
+                    'Homogeneity (protocol)':asv_sample}
 
-#### label free factor metrics
-factor_variance_all = fmet.get_factor_variance_all(factor_scores)
-
-
-####################################
-##### Factor metrics #####
-####################################
-all_metrics_dict = {'Bimodality':bimodality_scores, 
-                    'Specificity':factor_simpson_meanimp,
-                    'Effect size': factor_variance_all,
-                    'Homogeneity (cell line)':ASV_arith_cell,
-                    'Homogeneity (protocol)':ASV_arith_sample}
-
-
-### check the length of all the metrics
-
-all_metrics_df = pd.DataFrame(all_metrics_dict)
-factor_metrics = list(all_metrics_df.columns)
-all_metrics_df.head()
-
-all_metrics_scaled = fmet.get_scaled_metrics(all_metrics_df)
-
-fplot.plot_metric_correlation_clustermap(all_metrics_df)
-fplot.plot_metric_dendrogram(all_metrics_df)
-fplot.plot_metric_heatmap(all_metrics_scaled, factor_metrics, title='Scaled metrics for all the factors')
-
-### plot the factors 0:15
-fplot.plot_metric_heatmap(all_metrics_scaled[0:15,:], factor_metrics, title='')
-
-###
-
-### subset all_merrics_scaled numpy array to only include the matched factors
-all_metrics_scaled_matched = all_metrics_scaled[matched_factor_index,:]
-fplot.plot_metric_heatmap(all_metrics_scaled_matched, factor_metrics, x_axis_label=x_labels_matched,
-                          title='Scaled metrics for all the factors')
-
-## subset x axis labels based on het matched factors
-x_labels_matched = mean_importance_df_matched.columns.values
-
-
-
-#####################################################################
-### correlation between silhouette_scores_km, vrs_km and bimodality_index_scores
-bimodality_corr = np.corrcoef([silhouette_scores_km, vrs_km, bimodality_index_scores])
-bimodality_corr_df = pd.DataFrame(bimodality_corr)
-bimodality_corr_df.index = ['silhouette_km', 'vrs_km', 'bimodality_index']
-bimodality_corr_df.columns = ['silhouette_km', 'vrs_km', 'bimodality_index']
-bimodality_corr_df
-### calculate ASV based on entropy on the scaled variance per covariate for each factor
-ASV_entropy_sample = fmet.get_factor_entropy_all(pd.DataFrame(fmet.get_factors_SV_all_levels(factor_scores, y_sample)))
-ASV_entropy_cell = fmet.get_factor_entropy_all(pd.DataFrame(fmet.get_factors_SV_all_levels(factor_scores, y_cell_line)))
-
-## calculate correlation between all ASV scores
-ASV_list = [ASV_geo_sample, ASV_geo_cell,
-            ASV_arith_sample,ASV_arith_cell, 
-            meanimp_simpson_sample, meanimp_simpson_cell,
-            ASV_simpson_sample, ASV_simpson_cell,
-            ASV_entropy_sample, ASV_entropy_cell]
-ASV_names = ['ASV_geo_sample', 'ASV_geo_cell',
-            'ASV_arith_sample','ASV_arith_cell', 
-            'meanimp_simpson_sample', 'meanimp_simpson_cell',
-            'ASV_simpson_sample', 'ASV_simpson_cell',
-            'ASV_entropy_sample', 'ASV_entropy_cell']
-
-
-### calculate the correlation between all ASV scores without a function
-ASV_corr = np.zeros((len(ASV_list), len(ASV_list)))
-for i in range(len(ASV_list)):
-    for j in range(len(ASV_list)):
-        ASV_corr[i,j] = np.corrcoef(ASV_list[i], ASV_list[j])[0,1]
-ASV_corr_df = pd.DataFrame(ASV_corr)
-### set the row and column names of ASV_corr_df
-ASV_corr_df.index = ASV_names
-ASV_corr_df.columns = ASV_names
-## make a heatmap of the ASV_corr_df
-plt.figure(figsize=(15,12))
-plt.imshow(ASV_corr_df, cmap='coolwarm')
-plt.xticks(np.arange(ASV_corr_df.shape[1]), ASV_corr_df.columns.values, rotation=90, fontsize=30)
-plt.yticks(np.arange(ASV_corr_df.shape[0]), ASV_corr_df.index.values, fontsize=30)
-plt.xlabel('ASV scores', fontsize=34)
-plt.ylabel('ASV scores', fontsize=34)
-plt.title('Correlation between ASV scores', fontsize=34)
-plt.show()
-## clustermapping the ASV_corr_df
-import seaborn as sns
-sns.clustermap(ASV_corr_df, cmap='coolwarm', figsize=(15,12), row_cluster=True, col_cluster=True)
-
-plt.show()
-
+fist = met.FIST(metrics_dict)
+vis.plot_FIST(fist, title='Scaled metrics for all the factors')
+### subset the first 15 factors of fist dataframe
+vis.plot_FIST(fist.iloc[0:15,:])
+vis.plot_FIST(fist.iloc[matched_factor_index,:])
