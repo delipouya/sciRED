@@ -67,8 +67,6 @@ y = resid_pearson.T # (num_cells, num_genes)
 print('y shape: ', y.shape) # (num_cells, num_genes)
 
 
-
-
 ################################################
 #### Running PCA on the pearson residual ######
 ################################################

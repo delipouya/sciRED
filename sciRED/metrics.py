@@ -127,8 +127,6 @@ def simpson_diversity_index(mean_importance_df) -> list:
 
 
 
-
-
 def get_scaled_variance_level(a_factor, covariate_vector, covariate_level) -> float:
     ''' 
     calculate the scaled variance of one factor and one covariate

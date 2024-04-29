@@ -166,7 +166,7 @@ def get_mean_importance_level(importance_df_a_level, scale, mean) -> np.array:
     ### calculate the mean of the importance_df_np matrix
     if mean == 'arithmatic':
 
-        #### if any value in a column is equal or less than zero, add a small value to it - log of zero is undefined
+        #### if any value in a column is equal or less than zero, add a small value 
         if np.any(importance_df_np == 0):
                 importance_df_np[importance_df_np == 0] = 1e-10
         ### if any value is less than zero, replace with absolute value
@@ -177,7 +177,7 @@ def get_mean_importance_level(importance_df_a_level, scale, mean) -> np.array:
 
     if mean == 'geometric':
         
-        #### if any value in a column is equal tozero, add a small value to it - log of zero is undefined
+        #### if any value in a column is equal to zero, add a small value
         if np.any(importance_df_np == 0):
                 importance_df_np[importance_df_np == 0] = 1e-10
         ### if any value is less than zero, replace with absolute value
