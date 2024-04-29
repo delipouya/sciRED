@@ -2,18 +2,16 @@
 import numpy as np
 import pandas as pd
 import sklearn.cluster as cluster
-from sklearn import metrics
 import scipy as sp
 
 from sciRED.utils import preprocess as proc
 
 from sklearn.mixture import GaussianMixture
-#from sklearn.mixture import BayesianGaussianMixture
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
-#import diptest
+import diptest
 
 def kmeans_bimodal_score(factor_scores, num_groups=2, time_eff=True) -> list:
     '''
@@ -161,7 +159,7 @@ def get_SV_all_levels(a_factor, covariate_vector) -> list:
     return scaled_variance_all
 
 
-def get_a_factor_ASV(a_factor, covariate_vector, mean_type='geometric') -> float:
+def get_a_factor_ASV(a_factor, covariate_vector, mean_type='arithmetic') -> float:
     '''
     calculate an average for the relative scaled variance for all the levels in a covariate
     a_factor: numpy array of the one factor scores for all the cells (n_cells, 1)
@@ -171,11 +169,8 @@ def get_a_factor_ASV(a_factor, covariate_vector, mean_type='geometric') -> float
 
     ### calculate the relative scaled variance for all the levels in a covariate
     scaled_variance_all = get_SV_all_levels(a_factor, covariate_vector)
-    print('mean type: ', mean_type)
     ### calculate the geometric mean of the scaled variance for all levels of the covariate
     if mean_type == 'geometric':
-        #RSV = np.exp(np.mean(np.log(scaled_variance_all))) 
-        #RSV = np.exp(np.log(scaled_variance_all).mean())
         ### replace the zero values with a small number
         scaled_variance_all[scaled_variance_all == 0] = 1e-10
         ### calculate the geometric mean using the scipy gmean function
@@ -189,7 +184,7 @@ def get_a_factor_ASV(a_factor, covariate_vector, mean_type='geometric') -> float
     return RSV
 
 
-def average_scaled_var(factor_scores, covariate_vector, mean_type='geometric') -> list:
+def average_scaled_var(factor_scores, covariate_vector, mean_type='arithmetic') -> list:
     '''
     calculate the average scaled variance for all the factors
     factor_scores: numpy array of the factor scores for all the cells (n_cells, n_factors)
@@ -203,39 +198,6 @@ def average_scaled_var(factor_scores, covariate_vector, mean_type='geometric') -
         ASV = get_a_factor_ASV(a_factor, covariate_vector, mean_type)
         ASV_all.append(ASV)
     return ASV_all
-
-
-
-def get_scaled_metrics(all_metrics_df) -> np.array:
-    '''
-    Return numpy array of the scaled all_metrics pandas df based on each metric 
-    all_metrics_df: a pandas dataframe of the metrics for all the factors
-    '''
-    all_metrics_np = all_metrics_df.to_numpy()
-    
-    ### scale the metrics in a loop
-    all_metrics_scaled = np.zeros(all_metrics_np.shape)
-    for i in range(all_metrics_np.shape[1]):
-        all_metrics_scaled[:,i] = proc.get_scaled_vector(all_metrics_np[:,i])
-
-    return all_metrics_scaled
-
-
-
-def FIST(all_metrics_dict) -> pd.DataFrame:
-    '''
-    calculate the FIST score for each factor based on the metrics
-    all_metrics_dict: dictionary of all the metrics for each factor
-    '''
-    fist = pd.DataFrame(all_metrics_dict)
-    fist_scaled = get_scaled_metrics(fist)
-
-     ### remove numbers from heatmap cells
-    fist_scaled_df = pd.DataFrame(fist_scaled)
-    fist_scaled_df.columns = list(all_metrics_dict.keys())
-
-    return fist_scaled_df
-
 
 
 
@@ -273,3 +235,121 @@ def get_entropy(fcat) -> list:
         H = get_factor_entropy(fcat.iloc[:, factor_i])
         H_all.append(H)
     return H_all
+
+
+def get_gini(x):
+    '''
+    calculate the gini score of a vector
+    x: numpy array of the all factor match scores based on feature importance
+    gini=0 means perfect equality - all the covariate levels are matched equally with the factor - not specific
+    gini=1 means perfect inequality - the factor is only matched with one covariate level - very specific
+    '''
+    total = 0
+    for i, xi in enumerate(x[:-1], 1):
+        total += np.sum(np.abs(xi - x[i:]))
+    return total / (len(x)**2 * np.mean(x))
+
+
+
+def fcat_gini(fcat) -> float:
+    '''
+    calculate the gini score for the mean importance matrix
+    fcat: dataframe of mean importance of each factor for each covariate level
+    '''
+    
+    ### convert the mean_importance_df to a one dimensional numpy array
+    ### apply gini to each row of the mean_importance_df (each covariate level) and 
+    ## then take the mean for the whole matrix    
+    gini = fcat.apply(get_gini, axis=0).mean()
+    return gini
+
+
+
+def get_dip_test_all(factor_scores) -> list:
+    '''
+    This function calculates the Hartigan's dip test for unimodality for each factor individually.
+    The dip statistic is defined as the maximum difference between an empirical distribution function and 
+    the unimodal distribution function that minimizes that maximum difference.
+    factor_scores: numpy array of shape (num_cells, num_factors)
+    '''
+    dip_scores = []
+    pval_scores = []
+    for i in range(factor_scores.shape[1]):
+        dip, pval = diptest.diptest(factor_scores[:,i])
+        dip_scores.append(dip)
+        pval_scores.append(pval)
+
+    return dip_scores, pval_scores
+
+
+
+def get_total_sum_of_squares(a_factor) -> float:
+    '''
+    calculate the total sum of squares for a factor
+    a_factor: numpy array of the factor scores for all the cells (n_cells, 1)
+    '''
+    a_factor = a_factor.reshape(-1,1)
+    tss = np.sum((a_factor - np.mean(a_factor))**2)
+    return tss
+
+
+def get_factor_wcss_weighted(a_factor, labels) -> list:
+    '''
+    calculate the sum of squares error for each factor based on the clustering labels
+    a_factor: numpy array of the factor scores for all the cells (n_cells, 1)
+    labels: numpy array of the clustering labels for all the cells (n_cells, 1)
+    '''
+    a_factor = a_factor.reshape(-1,1)
+    n0 = a_factor[labels==0].shape[0]
+    n1 = a_factor[labels==1].shape[0]
+    sse = (1/n0)*(np.sum((a_factor - np.mean(a_factor[labels==0]))**2)) + (1/n1)*(np.sum((a_factor - np.mean(a_factor[labels==1]))**2))
+        
+    return sse
+
+
+def get_weighted_variance_reduction_score(a_factor, labels) -> float:
+    '''
+    calculate the weighted variance reduction score for a factor based on the clustering labels
+    The weighted variance reduction score (WVRS) measures the variance reduction independent of the cluster sizes.
+    In the numerator we calculate the mean of the two within cluster variances. 
+    The value of this score can be larger than 1. Low score reflects bimodality. 
+    WVRS has the ability to also identify splits into two clusters with extremely unequal sample sizes.
+    '''
+    tss = get_total_sum_of_squares(a_factor)
+    sse_weighted = get_factor_wcss_weighted(a_factor, labels)
+    n = a_factor.shape[0]
+    wvrs = (n*sse_weighted)/(2*tss)
+    return wvrs
+
+
+def get_scaled_metrics(all_metrics_df) -> np.array:
+    '''
+    Return numpy array of the scaled all_metrics pandas df based on each metric 
+    all_metrics_df: a pandas dataframe of the metrics for all the factors
+    '''
+    all_metrics_np = all_metrics_df.to_numpy()
+    
+    ### scale the metrics in a loop
+    all_metrics_scaled = np.zeros(all_metrics_np.shape)
+    for i in range(all_metrics_np.shape[1]):
+        all_metrics_scaled[:,i] = proc.get_scaled_vector(all_metrics_np[:,i])
+
+    return all_metrics_scaled
+
+
+
+def FIST(all_metrics_dict) -> pd.DataFrame:
+    '''
+    calculate the FIST score for each factor based on the metrics
+    all_metrics_dict: dictionary of all the metrics for each factor
+    '''
+    fist = pd.DataFrame(all_metrics_dict)
+    fist_scaled = get_scaled_metrics(fist)
+
+     ### remove numbers from heatmap cells
+    fist_scaled_df = pd.DataFrame(fist_scaled)
+    fist_scaled_df.columns = list(all_metrics_dict.keys())
+
+    return fist_scaled_df
+
+
