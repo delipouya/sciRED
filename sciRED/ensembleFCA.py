@@ -29,7 +29,6 @@ def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     return covariate_list
 
 
-
 def get_AUC_alevel(a_factor, a_binary_cov) -> float:
     '''
     calculate the AUC of a factor for a covariate level

@@ -44,6 +44,7 @@ glm_fit_dict = glm.poissonGLM(y, x)
 resid_pearson = glm_fit_dict['resid_pearson'] 
 resid_dict = {'pearson': resid_pearson}
 
+residual_type = 'pearson'
 ### make a for loop to calculate the importance scores for each residual type
 fcat_dict = {}
 time_dict_a_level_dict = {}
@@ -92,7 +93,7 @@ for residual_type in resid_dict.keys():
     fcat_m['residual_type'] = [residual_type]*fcat_m.shape[0]
 
     ### save baseline (unshuffled) fcat_m to csv
-    fca_m.to_csv('/home/delaram/sciFA/Results/benchmark/'+residual_type+'/base/'+
+    fcat_m.to_csv('/home/delaram/sciFA/Results/benchmark/'+residual_type+'/base/'+
                  'importance_df_melted_scMixology_'+residual_type+'_'+'baseline.csv')
 
     t_start_total = time.time()
