@@ -20,7 +20,7 @@ from exutils import ex_visualize as exvis
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
-NUM_GENES = 10000
+NUM_GENES = 1000#10000
 NUM_COMP_TO_VIS = 5
 
 data_file_path =  '/home/delaram/sciFA//Data/inputdata_rat_set1_countData_2.h5ad'
@@ -203,11 +203,12 @@ fcat_cell_type = efca.FCAT(y_cell_type, factor_scores, scale='standard', mean='a
 
 ### plot the FCAT scores
 fcat = pd.concat([fcat_sample, fcat_strain, fcat_cell_type], axis=0)
+fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
+
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
-fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
 
 ### using Otsu's method to calculate the threshold
 threshold = efca.get_otsu_threshold(fcat.values.flatten())
@@ -242,7 +243,8 @@ vis.plot_FCAT(fcat_matched, x_axis_label=x_labels_matched, title='', color='cool
                                  save=False, save_path='../Plots/mean_importance_df_matched_ratliver.pdf')
 
 
-factor_libsize_correlation = corr.get_factor_libsize_correlation(factor_scores, library_size = data.obs.nCount_originalexp)
+factor_libsize_correlation = corr.get_factor_libsize_correlation(factor_scores,
+                                                                 library_size = data.obs.nCount_RNA)
 vis.plot_factor_cor_barplot(factor_libsize_correlation, 
              title='Correlation of factors with library size', 
              y_label='Correlation', x_label='Factors')
