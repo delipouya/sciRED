@@ -112,7 +112,7 @@ def get_FCAT_dict(covariate_vec, factor_scores, time_eff=True) -> dict:
 
 
 
-def get_mean_importance_df_list(importance_df_levels_dict) -> pd.DataFrame:
+def get_mean_fcat_list(importance_df_levels_dict) -> pd.DataFrame:
         '''
         calculate the mean importance of all levels of a given covariate and returns a dataframe of size (num_levels, num_components)
         the mean importance is calculated with different scaling and mean calculation methods for comparison
