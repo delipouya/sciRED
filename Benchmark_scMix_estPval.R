@@ -55,6 +55,7 @@ sapply(1:length(fcat_models), function(i) {fcat_models[[i]]$imp_minmax <<- scale
 sapply(1:length(fcat_models), function(i) {fcat_models[[i]]$imp_max_scale <<- scale_Max(fcat_models[[i]]$importance)}, simplify = F)
 
 
+###### Figure B for the benchmark panel
 fcat_models_df = Reduce(rbind, fcat_models)
 ggplot(fcat_models_df, aes(x=model, y=importance, fill=type))+geom_boxplot()+
   theme_classic()+coord_flip()+scale_fill_manual(values=c("#56B4E9", "maroon"))+
@@ -92,7 +93,7 @@ cor_mat = cor(cor_df_merged)
 pheatmap::pheatmap(cor_mat, display_numbers = TRUE)
 ########### ########### ########### 
 
-########### calculating empirical pvalues
+########### calculating empirical p-values
 fcat_pvalue_list = sapply(1:length(model_names), function(i){add_emp_pvalue(fcat_models_df, model_names[i])}, simplify = F)
 names(fcat_pvalue_list) = model_names
 ggplot(fcat_pvalue_list$DecisionTree, aes(x=pvalue))+geom_histogram(alpha=0.8, bins=100)+theme_classic()+ggtitle(a_model)
@@ -112,100 +113,61 @@ sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='RandomForest'] < 0.05)
 sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='DecisionTree'] < 0.05)
 
 
-
 ###############################################################################################
 ########################## importance evaluation for model comparison
 ################################################################################################
-meanimp_df_merged_deviance = read.csv('/home/delaram/sciFA/Results/residual/meanimp_df_scMixology_varimax_baseline_deviance.csv')
-meanimp_df_residual_baseline$type = 'baseline'
+
+fcat_mean_base = read.csv('/home/delaram/sciRED/benchmark/scMix/baseline/fcat_scMix_mean_baseline.csv')
+fcat_mean_base$type = 'baseline'
+
+file = '/home/delaram/sciRED/benchmark/scMix/shuffle/mean/'
+fcat_mean_list = lapply(list.files(file, pattern = "fcat_scMix_mean*", full.names = T), read.csv)
+fcat_mean_shuffle <- Reduce(rbind,fcat_single_list)
+fcat_mean_shuffle$type = 'shuffle'
+head(fcat_mean_shuffle)
+
+fcat_mean = rbind(fcat_mean_base, fcat_mean_shuffle)
+fcat_mean_m = melt(fcat_mean)
+ggplot(fcat_mean_m, aes(y=value, x=type, fill=type))+geom_boxplot()+coord_flip()+ylab('Mean fcat')
+
+fcat_mean_base_m = melt(fcat_mean_base)
+fcat_mean_shuffle_m = melt(fcat_mean_shuffle)
+
+fcat_mean_base_df = data.frame(cov_level=fcat_mean_base_m$X, 
+                                 factor=fcat_mean_base_m$variable,
+                                 imp_score=fcat_mean_base_m$value,
+                                 res=fcat_mean_base_m$residual_type)
+head(fcat_mean_base_df)
 
 
-file = '/home/delaram/sciFA/Results/residual/pearson/'
-meanimp_list = lapply(list.files(file, pattern = "meanimp*", full.names = T), read.csv)
-meanimp_list_shuffle_pearson <- Reduce(rbind,meanimp_list)
-meanimp_list_shuffle_pearson$res = 'pearson'
-head(meanimp_list_shuffle_pearson)
+fcat_mean_shuffle_split <- split(fcat_mean_shuffle_m, fcat_mean_shuffle_m$residual_type)
+fcat_mean_base_split <- split(fcat_mean_base_m, fcat_mean_base_m$residual_type)
 
-file = '/home/delaram/sciFA/Results/residual/response/'
-meanimp_list = lapply(list.files(file, pattern = "meanimp*", full.names = T), read.csv)
-meanimp_shuffle_response <- Reduce(rbind,meanimp_list)
-meanimp_shuffle_response$res = 'response'
-head(meanimp_shuffle_response)
-
-file = '/home/delaram/sciFA/Results/residual/deviance//'
-meanimp_list = lapply(list.files(file, pattern = "meanimp*", full.names = T), read.csv)
-meanimp_shuffle_deviance <- Reduce(rbind,meanimp_list)
-meanimp_shuffle_deviance$res = 'deviance'
-head(meanimp_shuffle_deviance)
-
-meanimp_residual_shuffle = rbind(rbind(meanimp_list_shuffle_pearson, meanimp_shuffle_response), meanimp_shuffle_deviance)
-head(meanimp_residual_shuffle)
-meanimp_residual_shuffle$type = 'shuffle'
-
-
-meanimp_residual_merged = rbind(meanimp_df_residual_baseline, meanimp_residual_shuffle)
-head(meanimp_residual_merged)
-meanimp_residual_merged_m = melt(meanimp_residual_merged)
-head(meanimp_residual_merged_m)
-
-
-ggplot2::ggplot(meanimp_residual_merged_m, aes(y=value, x=res, fill=type))+geom_boxplot()+
-  theme_classic()+coord_flip()+ylab('Mean importance value')
-
-
-
-
-
-meanimp_df_residual_baseline_m = melt(meanimp_df_residual_baseline)
-head(meanimp_df_residual_baseline_m)
-meanimp_df_residual_shuffle_m = melt(meanimp_residual_shuffle)
-head(meanimp_df_residual_shuffle_m)
-
-
-
-
-mean_imp_baseline_m = data.frame(cov_level=meanimp_df_residual_baseline_m$X, 
-                                 factor=meanimp_df_residual_baseline_m$variable,
-                                 imp_score=meanimp_df_residual_baseline_m$value,
-                                 res=meanimp_df_residual_baseline_m$res)
-head(mean_imp_baseline_m)
-
-
-
-importance_df_shuffle_split <- split(meanimp_df_residual_shuffle_m, meanimp_df_residual_shuffle_m$res)
-lapply(importance_df_shuffle_split, head)
-importance_df_baseline_split <- split(meanimp_df_residual_baseline_m, meanimp_df_residual_baseline_m$res)
-lapply(importance_df_baseline_split, head)
-
-names(importance_df_shuffle_split)
-names(importance_df_baseline_split)
-
-for(i in 1:length(importance_df_shuffle_split)){
-  a_importance_df_shuffle = importance_df_shuffle_split[[i]]
-  a_importance_df_basline = importance_df_baseline_split[[i]]
-  importance_df_baseline_split[[i]]$pval = sapply(1:nrow(a_importance_df_basline), function(i) 
-    sum(a_importance_df_shuffle$value>a_importance_df_basline$value[i])/nrow(a_importance_df_shuffle))
+### this loop is helpful in cases were we try various residuals
+for(i in 1:length(fcat_mean_shuffle_split)){
+  a_mean_df_shuffle = fcat_mean_shuffle_split[[i]]
+  a_mean_df_base = fcat_mean_base_split[[i]]
+  fcat_mean_base_split[[i]]$pval = sapply(1:nrow(a_mean_df_base), function(i) 
+    sum(a_mean_df_shuffle$value>a_mean_df_base$value[i])/nrow(a_mean_df_shuffle))
 }
 
-tab=rbind(pval_0.05=data.frame(lapply(importance_df_baseline_split, function(x) sum(x$pval<0.05))),
-          pval_0.01=data.frame(lapply(importance_df_baseline_split, function(x) sum(x$pval<0.01))),
-          pval_0.001=data.frame(lapply(importance_df_baseline_split, function(x) sum(x$pval<0.001))))
+tab=rbind(pval_0.05=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.05))),
+          pval_0.01=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.01))),
+          pval_0.001=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.001))))
 
 gridExtra::grid.table(t(tab))
 dev.off()
 
-tab=rbind(pval_0.05=data.frame(lapply(importance_df_baseline_split, function(x) round(sum(x$pval<0.05)/180,2))),
-          pval_0.01=data.frame(lapply(importance_df_baseline_split, function(x) round(sum(x$pval<0.01)/180,2))),
-          pval_0.001=data.frame(lapply(importance_df_baseline_split, function(x) round(sum(x$pval<0.001)/180,2))))
+tab=rbind(pval_0.05=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.05)/180,2))),
+          pval_0.01=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.01)/180,2))),
+          pval_0.001=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.001)/180,2))))
 gridExtra::grid.table(t(tab))
 
 thr = 0.01
-sapply(1:length(importance_df_baseline_split), function(i) 
-{importance_df_baseline_split[[i]]$sig <<- importance_df_baseline_split[[i]]$pval < thr})
-head(importance_df_baseline_split[[1]])
+sapply(1:length(fcat_mean_base_split), function(i) {fcat_mean_base_split[[i]]$sig <<- fcat_mean_base_split[[i]]$pval < thr})
 
-AvgFacSig_df_model = sapply(1:length(importance_df_baseline_split), function(i){
-  a_model_imp_df = importance_df_baseline_split[[i]]
+AvgFacSig_df_model = sapply(1:length(fcat_mean_base_split), function(i){
+  a_model_imp_df = fcat_mean_base_split[[i]]
   a_model_imp_df_cov = split(a_model_imp_df, a_model_imp_df$X)
   AvgFacSig = sapply(1:length(a_model_imp_df_cov), function(i){
     sum(a_model_imp_df_cov[[i]]$sig)
@@ -214,8 +176,7 @@ AvgFacSig_df_model = sapply(1:length(importance_df_baseline_split), function(i){
   return(AvgFacSig)
 }, simplify = T)
 
-colnames(AvgFacSig_df_model) = names(importance_df_baseline_split) 
-head(AvgFacSig_df_model)
+colnames(AvgFacSig_df_model) = names(fcat_mean_base_split) 
 AvgFacSig_df_model_m = melt(AvgFacSig_df_model)
 head(AvgFacSig_df_model_m)
 
