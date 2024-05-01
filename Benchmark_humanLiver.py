@@ -1,3 +1,12 @@
+'''
+This script is used to benchmark the performance of sciRED on the Human Liver Atlas dataset.
+we generate the baseline and shuffle importance scores for the residual types: pearson, response, and deviance.
+The importance scores are calculated using the FCAT method.
+The benchmarking is done by comparing the run time of the models and the importance scores.
+the mean importance scores for three scaling and two mean types are calculated for each residual type.
+The importance scores and the mean importance scores are saved in csv files.
+'''
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -19,29 +28,13 @@ import time
 np.random.seed(10)
 NUM_COMPONENTS = 30
 NUM_GENES = 2000
-NUM_COMP_TO_VIS = 5
-
-
-#### Function to concatenate mean importance dataframes specific to scMix data
-def concatMeanFCAT(meanimp_df_list, mean_type_list, scale_type_list, 
-                           scores_included_list, residual_type, covariate_list):
-    for i in range(len(meanimp_df_list)):
-        meanimp_df_list[i]['mean_type'] = [mean_type_list[i]]*meanimp_df_list[i].shape[0]
-        meanimp_df_list[i]['scale_type'] = [scale_type_list[i]]*meanimp_df_list[i].shape[0]
-        meanimp_df_list[i]['scores_included'] = [scores_included_list[i]]*meanimp_df_list[i].shape[0]
-        meanimp_df_list[i]['covariate'] = covariate_list
-    meanimp_df = pd.concat(meanimp_df_list, axis=0)
-    ### add a column for resiudal type name
-    meanimp_df['residual_type'] = [residual_type]*meanimp_df.shape[0]
-    return meanimp_df
-
 
 
 data_file_path = '/home/delaram/sciFA//Data/HumanLiverAtlas.h5ad'
 data = exproc.import_AnnData(data_file_path)
 data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data to num_genes HVGs
 y, genes, num_cells, num_genes = proc.get_data_array(data)
-y_sample, y_cell_type = exproc.get_metadata_ratLiver(data)
+y_sample, y_cell_type = exproc.get_metadata_humanLiver(data)
 
 num_levels_sample = len(y_sample.unique())
 num_levels_cell_type = len(y_cell_type.unique())
@@ -57,7 +50,7 @@ resid_dict = {'pearson': resid_pearson, 'response': resid_response, 'deviance': 
 
 
 ### make a for loop to calculate the importance scores for each residual type
-importance_df_dict = {}
+fcat_dict = {}
 time_dict_a_level_dict = {}
 
 
@@ -113,7 +106,7 @@ for residual_type in resid_dict.keys():
     scores_included_list = [scores_included]*len(meanimp_df_list)
     covariate_list = ['sample']*num_levels_sample + ['cell_type']*num_levels_cell_type
 
-    meanimp_df = concatMeanFCAT(meanimp_df_list, mean_type_list, 
+    meanimp_df = pmut.concatMeanFCAT(meanimp_df_list, mean_type_list, 
                                         scale_type_list, scores_included_list, 
                                         residual_type=residual_type, covariate_list=covariate_list)
 
@@ -128,13 +121,15 @@ for residual_type in resid_dict.keys():
 
     ########## Comparing factor scores between models
     fcat_dict = {**fcat_dict_sample, **fcat_dict_cell_type}
-    fcat_m = pmut.get_melted_fcat(importance_df_dict)
+    fcat_m = pmut.get_melted_fcat(fcat_dict)
     fcat_m['residual_type'] = [residual_type]*fcat_m.shape[0]
 
 
     ### save importance_df_m and meanimp_df to csv
-    fcat_m.to_csv('/home/delaram/sciFA/Results/benchmark_humanliver/'+residual_type+'/base/'+'importance_df_melted_human_liver_'+residual_type+'_'+'baseline.csv')
-    meanimp_df.to_csv('/home/delaram/sciFA/Results/benchmark_humanliver/'+residual_type+'/base/'+'meanimp_df_'+'human_liver_'+residual_type+'_'+'baseline.csv')
+    fcat_m.to_csv('/home/delaram/sciFA/Results/benchmark_humanliver/'+residual_type+
+                  '/base/'+'importance_df_melted_human_liver_'+residual_type+'_'+'baseline.csv')
+    meanimp_df.to_csv('/home/delaram/sciFA/Results/benchmark_humanliver/'+residual_type+
+                      '/base/'+'meanimp_df_'+'human_liver_'+residual_type+'_'+'baseline.csv')
 
     t_start_total = time.time()
     #### shuffle the covariate vectors n times in a loop
@@ -189,7 +184,7 @@ for residual_type in resid_dict.keys():
         scores_included_list = [scores_included]*len(meanimp_df_list)
         covariate_list = ['sample']*num_levels_sample + ['cell_type']*num_levels_cell_type
 
-        meanimp_df = concatMeanFCAT(meanimp_df_list, mean_type_list, 
+        meanimp_df = pmut.concatMeanFCAT(meanimp_df_list, mean_type_list, 
                                             scale_type_list, scores_included_list, 
                                             residual_type=residual_type, covariate_list=covariate_list)
 

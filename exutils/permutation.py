@@ -184,6 +184,20 @@ def shuffle_covariate(covariate_vector) -> np.array:
     
     
 
+#### Function to concatenate mean importance dataframes specific to scMix data
+def concatMeanFCAT(meanimp_df_list, mean_type_list, scale_type_list, 
+                           scores_included_list, residual_type, covariate_list):
+    for i in range(len(meanimp_df_list)):
+        meanimp_df_list[i]['mean_type'] = [mean_type_list[i]]*meanimp_df_list[i].shape[0]
+        meanimp_df_list[i]['scale_type'] = [scale_type_list[i]]*meanimp_df_list[i].shape[0]
+        meanimp_df_list[i]['scores_included'] = [scores_included_list[i]]*meanimp_df_list[i].shape[0]
+        meanimp_df_list[i]['covariate'] = covariate_list
+    meanimp_df = pd.concat(meanimp_df_list, axis=0)
+    ### add a column for resiudal type name
+    meanimp_df['residual_type'] = [residual_type]*meanimp_df.shape[0]
+    return meanimp_df
+
+
 def plot_runtime_barplot(time_df):
     ''' make a barplot of time_df using sns and put the legend outside the plot
     x tick labels are models. each bar is a covariate level
