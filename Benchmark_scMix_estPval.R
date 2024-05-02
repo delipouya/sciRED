@@ -236,8 +236,3 @@ ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=model_type
   #geom_hline(yintercept=3, color = "red", size=1, linetype="dashed")+
   geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")
 #ggtitle(paste0('pvalue threshold=',thr))
-
-
-
-
-
