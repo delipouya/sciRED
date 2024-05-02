@@ -20,6 +20,10 @@ add_emp_pvalue <- function(fcat_df, a_model){
   ### input: dataframe of merged fcat scores for shuffled and baseline fca scores. 
   ### counts the number of observations in the empirical null distribution which are higher than the given fca score (fca_emp_h)
   ### calculates the empirical p-value by dividing the fca_emp_h by the total number of null dist observarions
+  if(!'importance' %in% colnames(fcat_df)){
+    colnames(fcat_df)[colnames(fcat_df)=="value"]='importance'
+  }
+  
   fcat_df_shuffle= fcat_df[fcat_df$type == 'shuffle',]
   null_empirical_dist = fcat_df_shuffle$importance[fcat_df_shuffle$model==a_model]
   
@@ -31,11 +35,12 @@ add_emp_pvalue <- function(fcat_df, a_model){
 }
 
 
+
 fcat_single_base = read.csv('/home/delaram/sciRED/benchmark/scMix/baseline/fcat_scMix_single_baseline.csv')
 fcat_single_base$type = 'baseline'
 
 file = '/home/delaram/sciRED/benchmark/scMix/shuffle/single/'
-fcat_single_list = lapply(list.files(file, pattern = "fcat_scMix*", full.names = T), read.csv)
+fcat_single_list = lapply(list.files(file, pattern = "fcat_scMix_single*", full.names = T), read.csv)
 fcat_single_shuffle <- Reduce(rbind,fcat_single_list)
 fcat_single_shuffle$type = 'shuffle'
 head(fcat_single_shuffle)
@@ -84,7 +89,7 @@ ggplot(fcat_models_df_shuffle, aes(x=importance))+geom_histogram( bins=200,fill=
   ylab("Frequency")+geom_vline(xintercept=0.09, color = "red", size=1, linetype="dashed")
 
 
-cor_df = data.frame(imp=fcat_models_df_base$importance, model=fcat_pvalue_df_base$model)
+cor_df = data.frame(imp=fcat_models_df_base$importance, model=fcat_models_df_base$model)
 cor_df_models<- split(cor_df, cor_df$model)
 sapply(1:length(cor_df_models), function(i) colnames(cor_df_models[[i]])[1]<<-names(cor_df_models)[i])
 cor_df_merged = Reduce(cbind, cor_df_models)
@@ -96,21 +101,45 @@ pheatmap::pheatmap(cor_mat, display_numbers = TRUE)
 ########### calculating empirical p-values
 fcat_pvalue_list = sapply(1:length(model_names), function(i){add_emp_pvalue(fcat_models_df, model_names[i])}, simplify = F)
 names(fcat_pvalue_list) = model_names
-ggplot(fcat_pvalue_list$DecisionTree, aes(x=pvalue))+geom_histogram(alpha=0.8, bins=100)+theme_classic()+ggtitle(a_model)
-
 fcat_pvalue_df = Reduce(rbind, fcat_pvalue_list)
-head(fcat_pvalue_df)
 
-ggplot(fcat_pvalue_df, aes(x=model, y=pvalue, fill=model))+geom_boxplot(alpha=0.7)+
-  theme_classic()+scale_fill_brewer(palette = 'Set1')+coord_flip()
+model_type_names = c("AUC","DecisionTree","LogisticRegression","XGB")
+model_type_names = names(table(fcat_pvalue_df$model))
+thr = 0.05
+cov_level_names = names(table(fcat_pvalue_df$covariate_level))
+summary_df = data.frame(matrix(nrow =length(model_type_names),ncol = length(cov_level_names)))
+colnames(summary_df) = cov_level_names
+summary_df
 
-ggplot(fcat_pvalue_df, aes(x=pvalue, fill=model))+
-  geom_density(alpha=0.5)+theme_classic()+scale_fill_brewer(palette = 'Set1')
+row=1
+thr = 0.05
+for (model_type in model_type_names){
+  basline_df  = fcat_pvalue_df[fcat_pvalue_df$model == model_type,]
+  #### defining which elements in baseline are considered as significant based on the threshold
+  sapply(1:length(basline_df), function(i) {basline_df$sig <<- basline_df$pval < thr})
+  
+  a_model_imp_df_cov = split(basline_df, basline_df$covariate_level)
+  AvgFacSig_per_cov = sapply(1:length(a_model_imp_df_cov), function(i){
+    sum(a_model_imp_df_cov[[i]]$sig)
+  })
+  names(AvgFacSig_per_cov) = names(a_model_imp_df_cov)
+  summary_df[row,]=AvgFacSig_per_cov
+  rownames(summary_df)[row]=model_type
+  row=row+1
+}
+summary_df
 
 
-sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='XGB'] < 0.05)
-sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='RandomForest'] < 0.05)
-sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='DecisionTree'] < 0.05)
+single_fcat_sum = melt( t(summary_df))
+head(single_fcat_sum)
+##### checking if it worked for single classifiers
+ggplot(single_fcat_sum, aes(y=value,x=Var2))+geom_boxplot()+
+  theme_classic()+scale_fill_brewer(palette = 'Set1')+
+  coord_flip()+theme(text = element_text(size=17))+xlab('')+
+  ylab('Average #sig matched factors per covariate level')+
+  geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
+  ggtitle(paste0('pvalue threshold=',thr))
+
 
 
 ###############################################################################################
@@ -119,10 +148,12 @@ sum(fcat_pvalue_df$pvalue[fcat_pvalue_df$model=='DecisionTree'] < 0.05)
 
 fcat_mean_base = read.csv('/home/delaram/sciRED/benchmark/scMix/baseline/fcat_scMix_mean_baseline.csv')
 fcat_mean_base$type = 'baseline'
+head(fcat_mean_base)
+test = melt(fcat_mean_base)
 
 file = '/home/delaram/sciRED/benchmark/scMix/shuffle/mean/'
 fcat_mean_list = lapply(list.files(file, pattern = "fcat_scMix_mean*", full.names = T), read.csv)
-fcat_mean_shuffle <- Reduce(rbind,fcat_single_list)
+fcat_mean_shuffle <- Reduce(rbind,fcat_mean_list)
 fcat_mean_shuffle$type = 'shuffle'
 head(fcat_mean_shuffle)
 
@@ -130,60 +161,83 @@ fcat_mean = rbind(fcat_mean_base, fcat_mean_shuffle)
 fcat_mean_m = melt(fcat_mean)
 ggplot(fcat_mean_m, aes(y=value, x=type, fill=type))+geom_boxplot()+coord_flip()+ylab('Mean fcat')
 
-fcat_mean_base_m = melt(fcat_mean_base)
-fcat_mean_shuffle_m = melt(fcat_mean_shuffle)
-
-fcat_mean_base_df = data.frame(cov_level=fcat_mean_base_m$X, 
-                                 factor=fcat_mean_base_m$variable,
-                                 imp_score=fcat_mean_base_m$value,
-                                 res=fcat_mean_base_m$residual_type)
-head(fcat_mean_base_df)
 
 
-fcat_mean_shuffle_split <- split(fcat_mean_shuffle_m, fcat_mean_shuffle_m$residual_type)
-fcat_mean_base_split <- split(fcat_mean_base_m, fcat_mean_base_m$residual_type)
+fcat_mean_m$model = paste0(fcat_mean_m$scale_type, '_', fcat_mean_m$mean_type)
+model_names = names(table(fcat_mean_m$model))
+########### calculating empirical p-values
+meanfcat_pvalue_list = sapply(1:length(model_names), function(i){add_emp_pvalue(fcat_mean_m, model_names[i])}, simplify = F)
+names(meanfcat_pvalue_list) = model_names
+meanfcat_pvalue_pvalue_df = Reduce(rbind, meanfcat_pvalue_list)
 
-### this loop is helpful in cases were we try various residuals
-for(i in 1:length(fcat_mean_shuffle_split)){
-  a_mean_df_shuffle = fcat_mean_shuffle_split[[i]]
-  a_mean_df_base = fcat_mean_base_split[[i]]
-  fcat_mean_base_split[[i]]$pval = sapply(1:nrow(a_mean_df_base), function(i) 
-    sum(a_mean_df_shuffle$value>a_mean_df_base$value[i])/nrow(a_mean_df_shuffle))
-}
+thr = 0.05
+colnames(meanfcat_pvalue_pvalue_df)[colnames(meanfcat_pvalue_pvalue_df)=='X']='covariate_level'
 
-tab=rbind(pval_0.05=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.05))),
-          pval_0.01=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.01))),
-          pval_0.001=data.frame(lapply(fcat_mean_base_split, function(x) sum(x$pval<0.001))))
+cov_level_names = names(table(meanfcat_pvalue_pvalue_df$covariate_level))
+summary_df = data.frame(matrix(nrow =length(model_names),ncol = length(cov_level_names)))
+colnames(summary_df) = cov_level_names
 
-gridExtra::grid.table(t(tab))
-dev.off()
-
-tab=rbind(pval_0.05=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.05)/180,2))),
-          pval_0.01=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.01)/180,2))),
-          pval_0.001=data.frame(lapply(fcat_mean_base_split, function(x) round(sum(x$pval<0.001)/180,2))))
-gridExtra::grid.table(t(tab))
-
-thr = 0.01
-sapply(1:length(fcat_mean_base_split), function(i) {fcat_mean_base_split[[i]]$sig <<- fcat_mean_base_split[[i]]$pval < thr})
-
-AvgFacSig_df_model = sapply(1:length(fcat_mean_base_split), function(i){
-  a_model_imp_df = fcat_mean_base_split[[i]]
-  a_model_imp_df_cov = split(a_model_imp_df, a_model_imp_df$X)
-  AvgFacSig = sapply(1:length(a_model_imp_df_cov), function(i){
+row=1
+for (model_type in model_names){
+  basline_df  = meanfcat_pvalue_pvalue_df[meanfcat_pvalue_pvalue_df$model == model_type,]
+  #### defining which elements in baseline are considered as significant based on the threshold
+  sapply(1:length(basline_df), function(i) {basline_df$sig <<- basline_df$pval < thr})
+  
+  a_model_imp_df_cov = split(basline_df, basline_df$covariate_level)
+  AvgFacSig_per_cov = sapply(1:length(a_model_imp_df_cov), function(i){
     sum(a_model_imp_df_cov[[i]]$sig)
   })
-  names(AvgFacSig) = names(a_model_imp_df_cov)
-  return(AvgFacSig)
-}, simplify = T)
+  names(AvgFacSig_per_cov) = names(a_model_imp_df_cov)
+  summary_df[row,]=AvgFacSig_per_cov
+  rownames(summary_df)[row]=model_type
+  row=row+1
+}
+summary_df
 
-colnames(AvgFacSig_df_model) = names(fcat_mean_base_split) 
-AvgFacSig_df_model_m = melt(AvgFacSig_df_model)
-head(AvgFacSig_df_model_m)
-
-ggplot(AvgFacSig_df_model_m, aes(y=value,x=Var2))+geom_boxplot()+
+mean_fcat_sum = melt( t(summary_df))
+head(mean_fcat_sum)
+mean_fcat_sum$Var2 = as.character(mean_fcat_sum$Var2)
+##### checking if it worked for single classifiers
+ggplot(mean_fcat_sum, aes(y=value,x=Var2))+geom_boxplot()+
   theme_classic()+scale_fill_brewer(palette = 'Set1')+
   coord_flip()+theme(text = element_text(size=17))+xlab('')+
   ylab('Average #sig matched factors per covariate level')+
   geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
   ggtitle(paste0('pvalue threshold=',thr))
+
+
+###################################
+
+single_fcat_sum$model_type =  'single'
+mean_fcat_sum$model_type =  'ensemble'
+head(single_fcat_sum)
+head(mean_fcat_sum)
+
+both_fcat_sum = rbind(single_fcat_sum, mean_fcat_sum)
+both_fcat_sum$Var2 = as.character(both_fcat_sum$Var2)
+both_fcat_sum$Var2[both_fcat_sum$Var2=='standard_arithmatic']='sciRED'
+head(both_fcat_sum)
+
+both_fcat_sum_single = both_fcat_sum[both_fcat_sum$model_type=='single' | both_fcat_sum$Var2=='sciRED',]
+
+both_fcat_sum_mean = both_fcat_sum[both_fcat_sum$model_type=='ensemble' | 
+                                     both_fcat_sum$Var2=='sciRED',]
+
+
+ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=model_type))+geom_boxplot()+
+  theme_classic()+scale_fill_brewer(palette = 'Set1')+
+  coord_flip()+theme(text = element_text(size=17),
+                     axis.text.y = element_text(size=19.5),axis.text.x = element_text(size=18)
+  )+xlab('')+
+  ylab('Average #sig matched factors per covariate level')+
+  #geom_ribbon(aes(ymin = 0, ymax = 3), fill = "grey70") +
+  geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
+  #geom_hline(yintercept=2, color = "red", size=1, linetype="dashed")+
+  #geom_hline(yintercept=3, color = "red", size=1, linetype="dashed")+
+  geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")
+#ggtitle(paste0('pvalue threshold=',thr))
+
+
+
+
 
