@@ -34,7 +34,7 @@ add_emp_pvalue <- function(fcat_df, a_model){
   return(model_fcat_base)
 }
 
-DATASET_NAME = 'scMix' #humanKidney, humanLiver
+DATASET_NAME = 'humanLiver'#'scMix' #humanKidney, humanLiver pbmc
 
 file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_single_baseline.csv')
 fcat_single_base = read.csv(file_name)
