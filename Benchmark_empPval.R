@@ -229,6 +229,7 @@ both_fcat_sum_mean = both_fcat_sum[both_fcat_sum$model_type=='ensemble' |
                                      both_fcat_sum$Var2=='sciRED',]
 
 
+data_set_name = 'Human liver atlas'
 ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=Var2))+geom_boxplot()+
   theme_classic()+scale_fill_brewer(name = '',palette = 'Set1')+
   coord_flip()+theme(text = element_text(size=17),
@@ -239,5 +240,5 @@ ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=Var2))+geo
   geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
   #geom_hline(yintercept=2, color = "red", size=1, linetype="dashed")+
   #geom_hline(yintercept=3, color = "red", size=1, linetype="dashed")+
-  geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")
-+ggtitle()
+  geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")+
+  ggtitle(data_set_name)

@@ -68,8 +68,8 @@ n = 10 #500
 
 ####################################
 #### fcat score calculation and run time as baseline ######
-fcat_dict_sample, time_dict_a_level_dict_sample = pmut.get_FCAT_dict(y_sample, factor_scores, time_eff=False) 
-fcat_dict_cell_type, time_dict_a_level_dict_cell_type = pmut.get_FCAT_dict(y_cell_type, factor_scores, time_eff=False) 
+fcat_dict_sample, time_dict_a_level_dict_sample = pmut.get_FCAT_dict(y_sample, factor_scores, time_eff=True) 
+fcat_dict_cell_type, time_dict_a_level_dict_cell_type = pmut.get_FCAT_dict(y_cell_type, factor_scores, time_eff=True) 
 covariate_list = ['sample']*num_levels_sample + ['cell_type']*num_levels_cell_type
 
 
@@ -125,8 +125,8 @@ for i in range(n):
     ####################################
     #### Importance calculation and run time for model comparison  ######
     ####################################
-    fcat_dict_sample, time_dict_a_level_dict_sample =  pmut.get_FCAT_dict(y_sample_shuffled, factor_scores, time_eff=False) 
-    fcat_dict_cell_type, time_dict_a_level_dict_cell_type =  pmut.get_FCAT_dict(y_cell_type_shuffled, factor_scores, time_eff=False) 
+    fcat_dict_sample, time_dict_a_level_dict_sample =  pmut.get_FCAT_dict(y_sample_shuffled, factor_scores, time_eff=True) 
+    fcat_dict_cell_type, time_dict_a_level_dict_cell_type =  pmut.get_FCAT_dict(y_cell_type_shuffled, factor_scores, time_eff=True) 
     
     ####################################
     ########### Comparing model run times
