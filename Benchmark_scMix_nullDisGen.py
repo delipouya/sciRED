@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
@@ -53,13 +50,13 @@ pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax
 
 factor_scores = pca_scores_varimax
 scores_included = 'baseline'
-n = 10 #500
+n = 500
 
 
 ####################################
 #### fcat score calculation and run time as baseline ######
-fcat_dict_protocol, time_dict_a_level_dict_protocol = pmut.get_FCAT_dict(y_protocol, factor_scores, time_eff=False) 
-fcat_dict_cell_line, time_dict_a_level_dict_cell_line = pmut.get_FCAT_dict(y_cell_line, factor_scores, time_eff=False) 
+fcat_dict_protocol, time_dict_a_level_dict_protocol = pmut.get_FCAT_dict(y_protocol, factor_scores, time_eff=True) 
+fcat_dict_cell_line, time_dict_a_level_dict_cell_line = pmut.get_FCAT_dict(y_cell_line, factor_scores, time_eff=True) 
 covariate_list = ['protocol']*3 + ['cell_line']*3
 
 
@@ -115,8 +112,8 @@ for i in range(n):
     ####################################
     #### Importance calculation and run time for model comparison  ######
     ####################################
-    fcat_dict_protocol, time_dict_a_level_dict_protocol =  pmut.get_FCAT_dict(y_protocol_shuffled, factor_scores, time_eff=False) 
-    fcat_dict_cell_line, time_dict_a_level_dict_cell_line =  pmut.get_FCAT_dict(y_cell_line_shuffled, factor_scores, time_eff=False) 
+    fcat_dict_protocol, time_dict_a_level_dict_protocol =  pmut.get_FCAT_dict(y_protocol_shuffled, factor_scores, time_eff=True) 
+    fcat_dict_cell_line, time_dict_a_level_dict_cell_line =  pmut.get_FCAT_dict(y_cell_line_shuffled, factor_scores, time_eff=True) 
     
     ####################################
     ########### Comparing model run times

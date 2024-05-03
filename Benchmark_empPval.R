@@ -34,14 +34,13 @@ add_emp_pvalue <- function(fcat_df, a_model){
   return(model_fcat_base)
 }
 
+DATASET_NAME = 'scMix' #humanKidney, humanLiver
 
-#'/home/delaram/sciRED/benchmark/scMix/baseline/fcat_scMix_single_baseline.csv'
-file_name = '/home/delaram/sciRED/benchmark/humanLiver//baseline/fcat_humanLiver_single_baseline.csv'
+file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_single_baseline.csv')
 fcat_single_base = read.csv(file_name)
 fcat_single_base$type = 'baseline'
 
-#dir_name = '/home/delaram/sciRED/benchmark/scMix/shuffle/single/'
-dir_name = '/home/delaram/sciRED/benchmark/humanLiver/shuffle/single/'
+dir_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/shuffle/single/')
 fcat_single_list = lapply(list.files(dir_name, pattern = "fcat_*", full.names = T), read.csv)
 fcat_single_shuffle <- Reduce(rbind,fcat_single_list)
 fcat_single_shuffle$type = 'shuffle'
@@ -148,14 +147,12 @@ ggplot(single_fcat_sum, aes(y=value,x=Var2))+geom_boxplot()+
 ########################## importance evaluation for model comparison
 ################################################################################################
 
-file_name = '/home/delaram/sciRED/benchmark/scMix/baseline/fcat_scMix_mean_baseline.csv'
-file_name = '/home/delaram/sciRED/benchmark/humanLiver/baseline/fcat_humanLiver_mean_baseline.csv'
+file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_mean_baseline.csv')
 fcat_mean_base = read.csv(file_name)
 fcat_mean_base$type = 'baseline'
 head(fcat_mean_base)
 
-dir_name = '/home/delaram/sciRED/benchmark/scMix/shuffle/mean/'
-dir_name = '/home/delaram/sciRED/benchmark/humanLiver/shuffle/mean/'
+dir_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/shuffle/mean/')
 fcat_mean_list = lapply(list.files(dir_name, pattern = "fcat_*", full.names = T), read.csv)
 fcat_mean_shuffle <- Reduce(rbind,fcat_mean_list)
 fcat_mean_shuffle$type = 'shuffle'
@@ -229,9 +226,11 @@ both_fcat_sum_mean = both_fcat_sum[both_fcat_sum$model_type=='ensemble' |
                                      both_fcat_sum$Var2=='sciRED',]
 
 
-data_set_name = 'Human liver atlas'
+
+data_set_name=''
+data_set_name = DATASET_NAME
 ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=Var2))+geom_boxplot()+
-  theme_classic()+scale_fill_brewer(name = '',palette = 'Set1')+
+  theme_classic()+scale_fill_brewer(name = '',palette = 'Set2')+
   coord_flip()+theme(text = element_text(size=17),
                      axis.text.y = element_text(size=19.5),axis.text.x = element_text(size=18)
   )+xlab('')+
