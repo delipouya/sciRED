@@ -373,3 +373,52 @@ def plot_sorted_factor_FCA_scores(fcat, covariate_level, title='Sorted associati
     plt.yticks(fontsize=23)
     plt.show()
     return a_cov_level_score_sorted, x_labels_sorted
+
+
+def plot_relativeVar(all_factors_df, title='', color="YlOrBr",x_axis_label=None, #colors: 'RdPu', 'YlOrBr'
+                               x_axis_fontsize=40, y_axis_fontsize=40, title_fontsize=40,
+                               x_axis_tick_fontsize=36, y_axis_tick_fontsize=38, figsize_x=None, 
+                               legend_fontsize=32,
+                               figsize_y=None, save=False, save_path='./file.pdf'):
+    '''
+    plot the score of all the factors for all the covariate levels
+    all_factors_df: a dataframe of a score for all the factors for all the covariate levels
+    
+    '''
+    if not figsize_x:
+        figsize_x = all_factors_df.shape[1]+6
+    if not figsize_y:
+        figsize_y = all_factors_df.shape[0]+2
+         
+    fig, ax = plt.subplots(figsize=(figsize_x,(figsize_y))) ## x axis, y axis
+    ax = sns.heatmap(all_factors_df, cmap=color, linewidths=.5, annot=False)
+    ax.set_title(title)
+    ax.set_xlabel('Factors')
+    ax.set_ylabel('Covariate level')
+    ### increase the fontsize of the x and y ticks axis labels
+    ax.xaxis.label.set_size(x_axis_fontsize)
+    ax.yaxis.label.set_size(y_axis_fontsize)
+    
+    ### set title fontsize
+    ax.title.set_size(title_fontsize)
+
+    ## add F1, F2, ... to the x-axis ticks
+    ### if x_axis_label is not None, use x_axis_label as the x-axis ticks
+    if x_axis_label is None:
+         x_axis_label = ['F'+str(i) for i in range(1, all_factors_df.shape[1]+1)]
+    
+    ax.set_xticklabels(x_axis_label, rotation=45, ha="right",)
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    ax.tick_params(axis='x', labelsize=x_axis_tick_fontsize)
+    ax.tick_params(axis='y', labelsize=y_axis_tick_fontsize)
+
+
+    ### increase the legend fontsize and make teh legened bar smaller
+    cbar = ax.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=legend_fontsize)
+    cbar.ax.yaxis.label.set_size(legend_fontsize)
+    plt.show()
+
+    if save:
+        fig.savefig(save_path, bbox_inches='tight')
+

@@ -200,6 +200,27 @@ def average_scaled_var(factor_scores, covariate_vector, mean_type='arithmetic') 
     return ASV_all
 
 
+def scaled_var_table(factor_scores, covariate_vector) -> pd.DataFrame:
+    '''
+    calculate the scaled variance for all the levels in a covariate for all the factors
+    factor_scores: numpy array of the factor scores for all the cells (n_cells, n_factors)
+    covariate_vector: numpy array of the covariate values for all the cells (n_cells, 1)
+    '''
+    SV_all_factors = []
+    for i in range(factor_scores.shape[1]):
+        a_factor = factor_scores[:,i]
+        SV_all = get_SV_all_levels(a_factor, covariate_vector)
+        
+        SV_all_factors.append(SV_all)
+
+    # convert to pandas db and set row as covariate_vector.unique()
+    SV_all_factors = pd.DataFrame(SV_all_factors)
+    SV_all_factors.columns = covariate_vector.unique()
+    
+    return SV_all_factors.T ### traspose the matrix to have the factors in columns and cov levels in rows
+
+
+
 
 def get_factor_entropy(x) -> float:
     '''

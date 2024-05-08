@@ -281,8 +281,6 @@ vis.plot_factor_cor_barplot(factor_libsize_correlation,
              y_label='Correlation', x_label='Factors')
 
 
-
-
 ####################################
 #### Bimodality scores
 silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
@@ -298,6 +296,12 @@ simpson_fcat = met.simpson_diversity_index(fcat)
 ### label dependent factor metrics
 asv_cell_line = met.average_scaled_var(factor_scores, covariate_vector=y_cell_line, mean_type='arithmetic')
 asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
+
+#### plot the ralative variance table
+svt_cell_line = met.scaled_var_table(factor_scores, y_cell_line)
+svt_protocol = met.scaled_var_table(factor_scores, y_protocol)
+svt = pd.concat([svt_cell_line, svt_protocol], axis=0)
+vis.plot_relativeVar(svt, title='Scaled variance table')
 
 
 ########### create factor-interpretibility score table (FIST) ######
