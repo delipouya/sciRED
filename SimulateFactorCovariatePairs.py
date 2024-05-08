@@ -20,7 +20,7 @@ num_sim_rounds = 100
 num_factors = 20
 num_mixtures = 2 ## each gaussian represents a covariate level 
 num_samples = 1000
-#### perform the simulation n times and calculate the average correlation between the overlap and all of the scores
+
 corr_df = pd.DataFrame()
 corr_df_list = []
 

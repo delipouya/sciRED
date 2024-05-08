@@ -34,7 +34,7 @@ add_emp_pvalue <- function(fcat_df, a_model){
   return(model_fcat_base)
 }
 
-DATASET_NAME = 'humanLiver'#'scMix' #humanKidney, humanLiver pbmc
+DATASET_NAME = 'pbmc'#'scMix' #humanKidney, humanLiver pbmc
 
 file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_single_baseline.csv')
 fcat_single_base = read.csv(file_name)
@@ -231,13 +231,41 @@ data_set_name=''
 data_set_name = DATASET_NAME
 ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=Var2))+geom_boxplot()+
   theme_classic()+scale_fill_brewer(name = '',palette = 'Set2')+
-  coord_flip()+theme(text = element_text(size=17),
-                     axis.text.y = element_text(size=19.5),axis.text.x = element_text(size=18)
+  coord_flip()+theme(text = element_text(size=16),axis.title.x=element_text(size=15),
+                     axis.text.y = element_text(size=17),axis.text.x = element_text(size=17)
   )+xlab('')+
   ylab('Average #sig matched factors per covariate level')+
-  #geom_ribbon(aes(ymin = 0, ymax = 3), fill = "grey70") +
   geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
-  #geom_hline(yintercept=2, color = "red", size=1, linetype="dashed")+
-  #geom_hline(yintercept=3, color = "red", size=1, linetype="dashed")+
   geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")+
   ggtitle(data_set_name)
+
+
+
+
+ggboxplot(both_fcat_sum_single,x='Var2', y='value',fill='Var2')+
+  stat_compare_means(ref.group = 'sciRED')+ggtitle(data_set_name)
+
+'
+http://www.sthda.com/english/articles/24-ggpubr-publication-ready-plots/76-add-p-values-and-significance-levels-to-ggplots/#compare-two-paired-samples
+https://www.r-bloggers.com/2017/06/add-p-values-and-significance-levels-to-ggplots/#google_vignette
+https://www.datanovia.com/en/blog/how-to-add-p-values-onto-basic-ggplots/
+
+
+# Comparison of each group against base-mean
+compare_means(len ~ dose,  data = ToothGrowth, ref.group = ".all.",
+              method = "t.test")
+# A tibble: 3 x 8
+.y. group1 group2            p        p.adj p.format p.signif method
+<chr>  <chr>  <chr>        <dbl>        <dbl>    <chr>    <chr>  <chr>
+  1   len  .all.    0.5 1.244626e-06 3.733877e-06  1.2e-06     **** T-test
+2   len  .all.      1 5.667266e-01 5.667266e-01     0.57       ns T-test
+3   len  .all.      2 1.371704e-05 2.743408e-05  1.4e-05     **** T-test
+# Visualize
+ggboxplot(ToothGrowth, x = "dose", y = "len",
+          color = "dose", palette = "jco")+
+  stat_compare_means(method = "anova", label.y = 40)+      # Add global p-value
+  stat_compare_means(label = "p.signif", method = "t.test",
+                     ref.group = ".all.")                  # Pairwise comparison against all
+                     
+                     
+'

@@ -37,12 +37,14 @@ def kmeans_bimodal_score(factor_scores, num_groups=2, time_eff=True) -> list:
             davies_bouldin_scores.append(davies_bouldin_score(factor_scores[:,i].reshape(-1,1), labels))
             wvrs.append(get_weighted_variance_reduction_score(factor_scores[:,i].reshape(-1,1), labels))
 
-            ## reverse davies_bouldin_scores in a way that lower values indicate better-defined clusters (reverse)
-            davies_bouldin_scores = [1/x for x in davies_bouldin_scores]
-            ### scale davies_bouldin_scores between 0 and 1
-            davies_bouldin_scores = proc.get_scaled_vector(davies_bouldin_scores)
+            
 
-    if not time_eff:    
+    if not time_eff:   
+        ## reverse davies_bouldin_scores in a way that lower values indicate better-defined clusters (reverse)
+        davies_bouldin_scores = [1/x for x in davies_bouldin_scores]
+        ### scale davies_bouldin_scores between 0 and 1
+        davies_bouldin_scores = proc.get_scaled_vector(davies_bouldin_scores) 
+
         return silhouette_scores, calinski_harabasz_scores, davies_bouldin_scores, wvrs
     
     return silhouette_scores
