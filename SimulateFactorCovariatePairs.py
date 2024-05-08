@@ -2,7 +2,7 @@
 simulate a factor with multiple covariates and calculate the overlap between the covariates
 and the matching scores between the covariates and the factor
 calculate the correlation between the overlap and the matching scores
-repeat the simulation nn times and calculate the average correlation between the overlap and all of the scores
+repeat the simulation n times and calculate the average correlation between the overlap and all of the scores
 save the results in a csv file
 """
 import numpy as np
