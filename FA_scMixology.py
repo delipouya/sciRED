@@ -301,7 +301,7 @@ asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmet
 svt_cell_line = met.scaled_var_table(factor_scores, y_cell_line)
 svt_protocol = met.scaled_var_table(factor_scores, y_protocol)
 svt = pd.concat([svt_cell_line, svt_protocol], axis=0)
-vis.plot_relativeVar(svt, title='Scaled variance table')
+vis.plot_relativeVar(svt, title='Relative variance score table')
 
 
 ########### create factor-interpretibility score table (FIST) ######

@@ -256,9 +256,10 @@ fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=40, y_axis_fontsize=39, title_fontsize=40,
               x_axis_tick_fontsize=36, y_axis_tick_fontsize=40, 
-              save=False, save_path='../Plots/mean_importance_df_matched_ratliver_2.pdf')
+              save=False, 
+              save_path='../Plots/mean_importance_df_matched_ratliver_2.pdf')
 
-strain_fcat_sorted_scores, strain_factors_sorted = vis.plot_sorted_factor_FCA_scores(fcat, 'strain')
+strain_fcat_sorted_scores, strain_factors_sorted = vis.plot_sorted_factor_FCA_scores(fcat, 'DA')
 
 
 
@@ -280,6 +281,16 @@ simpson_fcat = met.simpson_diversity_index(fcat)
 asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_cell_type, mean_type='arithmetic')
 asv_strain = met.average_scaled_var(factor_scores, covariate_vector=y_strain, mean_type='arithmetic')
 asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
+
+#### plot the ralative variance table
+svt_cell_type = met.scaled_var_table(factor_scores, y_cell_type)
+svt_strain = met.scaled_var_table(factor_scores, y_strain)
+svt_sample = met.scaled_var_table(factor_scores, y_sample)
+
+svt = pd.concat([svt_cell_type, svt_strain, svt_sample], axis=0)
+vis.plot_relativeVar(svt_cell_type, title='Relative variance score table')
+vis.plot_relativeVar(svt, title='Relative variance score table')
+
 
 
 ########### create factor-interpretibility score table (FIST) ######
