@@ -17,6 +17,7 @@ from sciRED.utils import visualize as vis
 from sciRED.utils import corr
 from exutils import ex_preprocess as exproc
 from exutils import ex_visualize as exvis
+import umap
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
@@ -26,11 +27,12 @@ NUM_COMP_TO_VIS = 5
 data_file_path =  '/home/delaram/sciFA/Data/HumanLiverAtlas.h5ad'
 data = exproc.import_AnnData(data_file_path)
 data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data to num_genes HVGs
+
+
 y, genes, num_cells, num_genes = proc.get_data_array(data)
-pd.DataFrame(genes).to_csv('/home/delaram/sciFA/Results/genes_humanlivermap.csv', index=False)
-y_sample, y_cell_type = exproc.get_metadata_ratLiver(data)
 
-
+#pd.DataFrame(genes).to_csv('/home/delaram/sciFA/Results/genes_humanlivermap.csv', index=False)
+y_sample, y_cell_type = exproc.get_metadata_humanLiver(data)
 colors_dict_humanLiver = exvis.get_colors_dict_humanLiver(y_sample, y_cell_type)
 plt_legend_sample = exvis.get_legend_patch(y_sample, colors_dict_humanLiver['sample'] )
 plt_legend_cell_type = exvis.get_legend_patch(y_cell_type, colors_dict_humanLiver['cell_type'] )
@@ -150,7 +152,6 @@ fcat = pd.concat([fcat_sample, fcat_cell_type], axis=0)
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
-
 fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
 
 ### using Otsu's method to calculate the threshold
@@ -192,9 +193,7 @@ vis.plot_factor_cor_barplot(factor_libsize_correlation,
              y_label='Correlation', x_label='Factors')
 
 
-
 #### concatenate the factor scores with the metadata and umap embedding
-import umap
 reducer = umap.UMAP()
 embedding = reducer.fit_transform(factor_scores)
 factor_scores_df = pd.DataFrame(factor_scores)
