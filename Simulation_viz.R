@@ -9,12 +9,12 @@ colnames(df) = df[1,]
 df = df[-1,]
 colnames(df)
 
-
 df_melt = melt(t(df))
 colnames(df_melt) = c('metric', 'overlap', 'R')
 df_melt$metric = gsub('factor_','',df_melt$metric)
 names(table(df_melt$metric))
 df_melt$R = as.numeric(df_melt$R)
+
 
 bimodality_metric = c('bimodality_index', 'calinski_harabasz','davies_bouldin', 'dip_score', "silhouette","wvrs" )
 heterogeneity_metric=c("ASV_arith","ASV_geo") #"1-AUC_arith","1-AUC_geo",'ASV_simpson','ASV_entropy'
