@@ -21,5 +21,5 @@ pipeline and applies it to a stimulated PBMC dataset.
 
 ## Citation
 
-If you find scITD useful for your publication, please cite:
+If you find sciRED useful for your publication, please cite:
 [Pouyabahar et al. Interpretable single-cell factor decomposition using sciRED.](url)
