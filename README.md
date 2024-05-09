@@ -1,5 +1,5 @@
 
-<img src="https://github.com/delipouya/sciRED/blob/main/inst/sciRED_logo.pdf" align="right" height="200">
+<img src="https://github.com/delipouya/sciRED/blob/main/inst/sciRED_logo.png" align="right" height="200">
 
 # sciRED
 
