@@ -3,7 +3,7 @@
 
 - [Introduction](#introduction)
 - [Installation](#installation)
-- [Walkthrough](#walkthrough)
+- [Tutorial](#tutorial)
 - [Citation](#citation)
 
 ## Introduction
@@ -13,7 +13,7 @@ Single-cell RNA sequencing (scRNA-seq) maps gene expression heterogeneity within
 
 ## Installation
 
-## Walkthrough
+## Tutorial
 
 Follow  to
 learn how to use sciRED. The tutorial introduces the standard processing
