@@ -1,4 +1,6 @@
 
+<img src="https://github.com/delipouya/sciRED/blob/main/inst/sciRED_logo.pdf" align="right" height="200">
+
 # sciRED
 
 - [Introduction](#introduction)
