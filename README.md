@@ -15,7 +15,7 @@ Single-cell RNA sequencing (scRNA-seq) maps gene expression heterogeneity within
 
 ## Tutorial
 
-Follow  to
+Follow [this link](url) to
 learn how to use sciRED. The tutorial introduces the standard processing
 pipeline and applies it to a stimulated PBMC dataset.
 
