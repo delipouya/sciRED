@@ -1,13 +1,13 @@
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
-from exutils import permutation as pmut
+from sciRED.utils import permutation as pmut
 import numpy as np
 import pandas as pd
 
 from sciRED import rotations as rot
 from sciRED.utils import preprocess as proc
-from exutils import ex_preprocess as exproc
+from sciRED.utils import ex_preprocess as exproc
 import time
 
 
