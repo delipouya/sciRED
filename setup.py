@@ -1,11 +1,9 @@
 from setuptools import setup, find_packages
 
 
-VERSION = '0.0.1' 
-DESCRIPTION = 'single cell Interpretable Residual Decomposition'
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+VERSION = '0.2.0' 
+DESCRIPTION = 'single cell interpretable Residual Decomposition'
+LONG_DESCRIPTION = "sciRED is a Python package designed to improve the interpretation of single-cell RNA sequencing data, specifically focusing on signal extraction via factor decomposition. It simplifies the process by removing confounding effects, mapping factors to covariates, identifying unexplained factors, and annotating genes and biological processes. Applying sciRED to various scRNA-seq datasets can unveil diverse biological signals, such as health/disease variation, cell-type identity, sex/age differences, stimulation signals, and rare cell type signatures."
 
 setup(
     name='sciRED',
@@ -15,23 +13,22 @@ setup(
     packages=['sciRED'],
     
     # Needed for dependencies
-    install_requires=['numpy','pandas','scanpy','statsmodels','seaborn','umap', 'matplotlib',
-                      'scikit-learn','scipy','random','xgboost','time','skimage','diptest'],
+    install_requires=['numpy','pandas','scanpy','statsmodels','seaborn','umap-learn', 'matplotlib',
+                      'scikit-learn','scipy','xgboost','scikit-image','diptest==0.2.0'],
     extras_require={
         'dev': ['pytest', 'twine']
     },
-
     version=VERSION,
     
     license='MIT',
     description=DESCRIPTION,
-    keywords=['sciRED', 'single cell RNA-seq'],
+    keywords=['sciRED', 'single cell RNA-seq', 'interpretability', 'factor decomposition'],
 
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
 
     classifiers= [
             "Development Status :: 3 - Alpha",
-            "Intended Audience :: Education",
+            "Intended Audience :: Science/Research",
             "Programming Language :: Python :: 3",
             "Operating System :: OS Independent",
         ]
