@@ -3,6 +3,9 @@ import scanpy as sc
 import pandas as pd
 import statsmodels as sm
 
+def utils_test():
+    print('sciRED utils is working')
+
 
 def get_data_array(data) -> np.array:
     """Return the data matrix as a numpy array, and the number of cells and genes.

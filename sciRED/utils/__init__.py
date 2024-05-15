@@ -1,9 +1,9 @@
-
 from .corr import(
     get_factor_libsize_correlation
 )
 
 from .preprocess import(
+    utils_test,
     get_data_array,
     get_highly_variable_gene_indices,
     get_sub_data,
@@ -66,3 +66,5 @@ from .simulation import(
     get_arithmatic_mean_df,
     get_geometric_mean_df,
 )
+
+__all__ = ['corr', 'preprocess', 'visualize', 'ex_visualize', 'ex_preprocess', 'simulation']

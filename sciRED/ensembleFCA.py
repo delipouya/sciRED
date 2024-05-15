@@ -15,6 +15,10 @@ import scipy.stats as ss
 import scipy as sp
 
 
+def test():
+    ''' test sciRED package functions work'''
+
+    print('sciRED main is working')
 
 def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     ''' return a binary covariate vector for a given covariate and covariate level

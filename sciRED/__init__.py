@@ -1,4 +1,7 @@
+from . import utils
+
 from .ensembleFCA import (
+    test,
     get_binary_covariate,
     get_AUC_alevel,
     get_AUC_all_factors_alevel,
@@ -42,3 +45,4 @@ from .rotations import (
     get_rotated_scores,
 )
 
+__all__ = ['utils', 'ensembleFCA', 'glm', 'metrics', 'rotations']
