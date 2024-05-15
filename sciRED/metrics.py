@@ -4,14 +4,24 @@ import pandas as pd
 import sklearn.cluster as cluster
 import scipy as sp
 
-from sciRED.utils import preprocess as proc
-
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
 import diptest
+
+
+
+def get_scaled_vector(a_vector):
+    ''' scale a vector to be between 0 and 1
+    a_vector: a numpy array
+    '''
+    ### scale the vector to be between 0 and 1
+    a_vector_scaled = (a_vector - np.min(a_vector))/(np.max(a_vector) - np.min(a_vector))
+    return a_vector_scaled
+
+
 
 def kmeans_bimodal_score(factor_scores, num_groups=2, time_eff=True) -> list:
     '''
@@ -43,7 +53,7 @@ def kmeans_bimodal_score(factor_scores, num_groups=2, time_eff=True) -> list:
         ## reverse davies_bouldin_scores in a way that lower values indicate better-defined clusters (reverse)
         davies_bouldin_scores = [1/x for x in davies_bouldin_scores]
         ### scale davies_bouldin_scores between 0 and 1
-        davies_bouldin_scores = proc.get_scaled_vector(davies_bouldin_scores) 
+        davies_bouldin_scores = get_scaled_vector(davies_bouldin_scores) 
 
         return silhouette_scores, calinski_harabasz_scores, davies_bouldin_scores, wvrs
     
@@ -353,7 +363,7 @@ def get_scaled_metrics(all_metrics_df) -> np.array:
     ### scale the metrics in a loop
     all_metrics_scaled = np.zeros(all_metrics_np.shape)
     for i in range(all_metrics_np.shape[1]):
-        all_metrics_scaled[:,i] = proc.get_scaled_vector(all_metrics_np[:,i])
+        all_metrics_scaled[:,i] = get_scaled_vector(all_metrics_np[:,i])
 
     return all_metrics_scaled
 
