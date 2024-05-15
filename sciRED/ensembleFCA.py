@@ -20,6 +20,8 @@ def test():
 
     print('sciRED main is working')
 
+    
+
 def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     ''' return a binary covariate vector for a given covariate and covariate level
     covariate_vec: a vector of values for a covariate

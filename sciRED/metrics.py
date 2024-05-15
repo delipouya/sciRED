@@ -1,7 +1,6 @@
 
 import numpy as np
 import pandas as pd
-import sklearn.cluster as cluster
 import scipy as sp
 
 from sklearn.mixture import GaussianMixture

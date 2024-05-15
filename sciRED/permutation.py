@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sciRED import ensembleFCA as efca
-from sciRED.utils import preprocess as proc
+import ensembleFCA as efca
+from utils import preprocess as proc
 
 
 from sklearn.linear_model import LogisticRegression

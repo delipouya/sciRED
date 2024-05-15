@@ -1,7 +1,6 @@
 
 import numpy as np
 import pandas as pd
-import statsmodels as sm
 import scanpy as sc
 
 def import_AnnData(path_to_file) -> sc.AnnData:

@@ -2,11 +2,7 @@ import seaborn as sns
 import numpy as np
 import umap
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import seaborn as sns
-import pandas as pd
-from scipy.cluster.hierarchy import dendrogram, linkage
-import random
 
 
 def plot_pca(pca_scores, 

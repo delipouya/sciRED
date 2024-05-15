@@ -1,7 +1,4 @@
 import numpy as np
-import scanpy as sc
-import pandas as pd
-import statsmodels as sm
 
 def utils_test():
     print('sciRED utils is working')
