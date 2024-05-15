@@ -1,7 +1,7 @@
 import numpy as np
 import scanpy as sc
 import pandas as pd
-import statsmodels.api as sm
+import statsmodels as sm
 
 
 def get_data_array(data) -> np.array:
