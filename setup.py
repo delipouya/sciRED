@@ -14,16 +14,17 @@ setup(
     author_email='d.pouyabahar@mail.utoronto.ca',
     packages=['sciRED'],
     # Needed for dependencies
-    install_requires=['numpy'],
+    install_requires=['numpy','pandas','scanpy','statsmodels','seaborn','umap', 'matplotlib',
+                      'scikit-learn','scipy','random','xgboost','time','skimage','diptest'],
     extras_require={
         'dev': ['pytest', 'twine']
     },
-    
+
     version=VERSION,
     
     license='MIT',
     description=DESCRIPTION,
-    keywords=['python', 'first package'],
+    keywords=['sciRED', 'single cell RNA-seq'],
 
     long_description=long_description,
 

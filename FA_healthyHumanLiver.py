@@ -15,8 +15,8 @@ from sciRED import metrics as met
 from sciRED.utils import preprocess as proc
 from sciRED.utils import visualize as vis
 from sciRED.utils import corr
-from exutils import ex_preprocess as exproc
-from exutils import ex_visualize as exvis
+from sciRED.utils import ex_preprocess as exproc
+from sciRED.utils import ex_visualize as exvis
 import umap
 
 np.random.seed(10)
