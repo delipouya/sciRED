@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-VERSION = '1.1.1' 
+VERSION = '1.1.7' 
 DESCRIPTION = 'single cell interpretable Residual Decomposition'
 LONG_DESCRIPTION = "sciRED is a Python package designed to improve the interpretation of single-cell RNA sequencing data, specifically focusing on signal extraction via factor decomposition. It simplifies the process by removing confounding effects, mapping factors to covariates, identifying unexplained factors, and annotating genes and biological processes. Applying sciRED to various scRNA-seq datasets can unveil diverse biological signals, such as health/disease variation, cell-type identity, sex/age differences, stimulation signals, and rare cell type signatures."
 
@@ -9,7 +9,7 @@ setup(
     url='https://github.com/delipouya/sciRED.git',
     author='Delaram Pouyabahar',
     author_email='d.pouyabahar@mail.utoronto.ca',
-    packages=['sciRED'],
+    packages=find_packages(),
     
     # Needed for dependencies
     install_requires=['numpy','pandas','scanpy','statsmodels','seaborn','umap-learn', 'matplotlib',
@@ -24,6 +24,7 @@ setup(
     keywords=['sciRED', 'single cell RNA-seq', 'interpretability', 'factor decomposition'],
 
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/plain',
 
     classifiers= [
             "Development Status :: 3 - Alpha",
@@ -32,5 +33,3 @@ setup(
             "Operating System :: OS Independent",
         ]
 )
-
-
