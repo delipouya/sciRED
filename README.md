@@ -15,7 +15,7 @@ Single-cell RNA sequencing (scRNA-seq) maps gene expression heterogeneity within
 
 ## Installation
 Please make sure to install the following packages before installing sciRED:
-package requirements: numpy, pandas, scanpy, statsmodels, seaborn, umap-learn, matplotlib, scikit-learn, scipy, xgboost, scikit-image,[diptest==0.2.0](https://pypi.org/project/diptest/0.2.0/)
+numpy, pandas, scanpy, statsmodels, seaborn, umap-learn, matplotlib, scikit-learn, scipy, xgboost, scikit-image, [diptest==0.2.0](https://pypi.org/project/diptest/0.2.0/)
 
 
 ## Tutorial
