@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 VERSION = '0.0.1' 
@@ -13,6 +13,7 @@ setup(
     author='Delaram Pouyabahar',
     author_email='d.pouyabahar@mail.utoronto.ca',
     packages=['sciRED'],
+    
     # Needed for dependencies
     install_requires=['numpy','pandas','scanpy','statsmodels','seaborn','umap', 'matplotlib',
                       'scikit-learn','scipy','random','xgboost','time','skimage','diptest'],
