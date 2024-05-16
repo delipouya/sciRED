@@ -1,5 +1,5 @@
 import numpy as np
-import statsmodels as sm
+import statsmodels.api as sm
 import time
 
 def poissonGLM(y, x) -> dict:
