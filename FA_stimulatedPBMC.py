@@ -15,8 +15,9 @@ from sciRED import metrics as met
 from sciRED.utils import preprocess as proc
 from sciRED.utils import visualize as vis
 from sciRED.utils import corr
-from sciRED.utils import ex_preprocess as exproc
-from sciRED.utils import ex_visualize as exvis
+from sciRED.examples import ex_preprocess as exproc
+from sciRED.examples import ex_visualize as exvis
+
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
