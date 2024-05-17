@@ -23,7 +23,7 @@ NUM_GENES = 2000
 NUM_COMP_TO_VIS = 5
 
 
-data_file_path = '/home/delaram/sciFA//Data/Human_Kidney_data.h5ad'  ### data is already normalized
+data_file_path = '/home/delaram/sciFA/Data/Human_Kidney_data.h5ad'  ### data is already normalized
 data = exproc.import_AnnData(data_file_path)  ## based on scanpy
 
 data, gene_idx = proc.get_sub_data(data, num_genes=5000) # subset the data to num_genes HVGs
