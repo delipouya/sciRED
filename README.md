@@ -14,15 +14,13 @@ Single-cell RNA sequencing (scRNA-seq) maps gene expression heterogeneity within
 
 
 ## Installation
-Please make sure to install the following packages before installing sciRED:
+Please make sure to install the following packages **before installing sciRED**:
 numpy, pandas, scanpy, statsmodels, seaborn, umap-learn, matplotlib, scikit-learn, scipy, xgboost, scikit-image, [diptest==0.2.0](https://pypi.org/project/diptest/0.2.0/)
 
 
 ## Tutorial
 
-Follow [this link](https://github.com/delipouya/sciRED/blob/main/tutorial_stimulatedPBMC.ipynb) to
-learn how to use sciRED. The tutorial introduces the standard processing
-pipeline and applies it to a stimulated PBMC dataset.
+Follow [tutorial-1](https://github.com/delipouya/sciRED/blob/main/tutorial1_scMixology.ipynb) and [tutorial-2](https://github.com/delipouya/sciRED/blob/main/tutorial2_stimulatedPBMC.ipynb) to learn how to use sciRED. The tutorial introduces the standard processing pipeline and indicates application of sciRED on the scMixlogy and stimulated PBMC datasets.
 
 ## Citation
 
