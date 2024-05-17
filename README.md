@@ -20,7 +20,7 @@ numpy, pandas, scanpy, statsmodels, seaborn, umap-learn, matplotlib, scikit-lear
 
 ## Tutorial
 
-Follow [this link](url) to
+Follow [this link](https://github.com/delipouya/sciRED/blob/main/tutorial_stimulatedPBMC.ipynb) to
 learn how to use sciRED. The tutorial introduces the standard processing
 pipeline and applies it to a stimulated PBMC dataset.
 
