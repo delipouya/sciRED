@@ -20,7 +20,7 @@ numpy, pandas, scanpy, statsmodels, seaborn, umap-learn, matplotlib, scikit-lear
 
 ## Tutorial
 
-Follow [tutorial-1](https://github.com/delipouya/sciRED/blob/main/tutorial1_scMixology.ipynb) and [tutorial-2](https://github.com/delipouya/sciRED/blob/main/tutorial2_stimulatedPBMC.ipynb) to learn how to use sciRED. The tutorial introduces the standard processing pipeline and indicates application of sciRED on the scMixlogy and stimulated PBMC datasets.
+Follow [tutorial-1](https://github.com/delipouya/sciRED/blob/main/tutorial1_scMixology.ipynb) and [tutorial-2](https://github.com/delipouya/sciRED/blob/main/tutorial2_stimulatedPBMC.ipynb) to learn how to use sciRED. These tutorials introduce the standard processing pipeline and indicate application of sciRED on the scMixlogy and stimulated PBMC datasets.
 
 ## Citation
 
