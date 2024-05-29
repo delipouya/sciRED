@@ -7,6 +7,7 @@
 - [Installation](#installation)
 - [Tutorial](#tutorial)
 - [Citation](#citation)
+- [Contact](#Contact)
 
 ## Introduction
 
@@ -23,6 +24,11 @@ sciRED package can be installed using PyPI:
 pip install -i https://test.pypi.org/simple/ sciRED
 ```
 
+Common issues:
+Some of the prerequest packages require Numba package for parallel implementation. Please install order versions of numpy (such as 1.22.4) in case you case you came across the following error: 
+```bash
+Numba needs NumPy 1.24 or less
+```
 
 ## Tutorial
 
@@ -32,3 +38,6 @@ Follow [tutorial-1](https://github.com/delipouya/sciRED/blob/main/tutorial1_scMi
 
 If you find sciRED useful for your publication, please cite:
 [Pouyabahar et al. Interpretable single-cell factor decomposition using sciRED.](url)
+
+## Contact
+Please contact Delaram Pouyabahar for questions: d.pouyabahar@mail.utoronto.ca
