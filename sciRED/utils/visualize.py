@@ -1,6 +1,6 @@
 import seaborn as sns
 import numpy as np
-import umap
+import umap.umap_ as umap
 import matplotlib.pyplot as plt
 import seaborn as sns
 
