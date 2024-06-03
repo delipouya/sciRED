@@ -43,6 +43,8 @@ Some of the prerequisite packages require the Numba package for parallel impleme
 ```bash
 Numba needs NumPy 1.24 or less
 ```
+Detailed package version information is provided in the requirements.txt file.
+
 
 ## Tutorial
 
