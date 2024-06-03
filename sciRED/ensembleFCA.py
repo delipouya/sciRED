@@ -30,7 +30,7 @@ def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     covariate_list = np.zeros((len(covariate_vec)))
     for i in range(len(covariate_vec)):
         ### select the ith element of 
-        if covariate_vec[i] == covariate_level:
+        if covariate_vec.iloc[i] == covariate_level:
             covariate_list[i] = 1
     return covariate_list
 
@@ -96,7 +96,7 @@ def get_importance_df(factor_scores, a_binary_cov, time_eff=True) -> pd.DataFram
     force_all: if True, include KNeighbors_permute which often has lower performance 
     '''
 
-    models = {'LogisticRegression': LogisticRegression(), 
+    models = {'LogisticRegression': LogisticRegression(solver='lbfgs', max_iter=500), 
               'DecisionTree': DecisionTreeClassifier(), 
               'RandomForest': RandomForestClassifier(), 
               'XGB': XGBClassifier(), 
@@ -206,13 +206,13 @@ def FCAT(covariate_vec, factor_scores,
     mean_importance_df = pd.DataFrame(columns=['F'+str(i) for i in range(1, factor_scores.shape[1]+1)])
 
     for covariate_level in np.unique(covariate_vec):
-        print('covariate_level: ', covariate_level)
+        #print('covariate_level: ', covariate_level)
 
         a_binary_cov = get_binary_covariate(covariate_vec, covariate_level)
         importance_df_a_level = get_importance_df(factor_scores, a_binary_cov, time_eff=time_eff)
         mean_importance_a_level = get_mean_importance_level(importance_df_a_level, scale, mean)
 
-        print('mean_importance_a_level:', mean_importance_a_level)
+        #print('mean_importance_a_level:', mean_importance_a_level)
         mean_importance_df.loc[covariate_level] = mean_importance_a_level
 
     return mean_importance_df

@@ -12,7 +12,7 @@ def get_legend_patch(y_sample, sample_color):
     '''
 
     ### make a dictionary of colors annd samples
-    my_color = {y_sample[i]: sample_color[i] for i in range(len(y_sample))}
+    my_color = {y_sample.iloc[i]: sample_color[i] for i in range(len(y_sample))}
 
     ### make a legend patch based on my_color
     legend_patch = [mpatches.Patch(color=my_color[i], label=i) for i in np.unique(y_sample)]
@@ -52,14 +52,14 @@ def get_colors_dict_ratLiver(y_sample, y_strain,y_cell_type):
 
     ### make a dictionary of colors for each strain in y_strain
     my_color = {'DA': 'red', 'LEW': 'blue'}
-    strain_color = [my_color[y_strain[i]] for i in range(len(y_strain))]
+    strain_color = [my_color[y_strain.iloc[i]] for i in range(len(y_strain))]
 
 
     ### make a dictionary of colors for each 16 cluster in y_cluster. use np.unique(y_cell_type)
     ### generate 16 colors using the following code:
     my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_cell_type)}
-    cell_type_color = [my_color[y_cell_type[i]] for i in range(len(y_cell_type))]
+    cell_type_color = [my_color[y_cell_type.iloc[i]] for i in range(len(y_cell_type))]
 
     return {'sample': sample_color, 'strain': strain_color, 'cell_type':cell_type_color}
 
@@ -75,13 +75,13 @@ def get_colors_dict_humanLiver(y_sample, y_cell_type):
 
     ### make a dictionary of colors for each sample in y_sample
     my_color = {'P1TLH': 'red','P3TLH': 'orange', 'P2TLH': 'blue', 'P5TLH': 'purple','P4TLH': 'green'}
-    sample_color = [my_color[y_sample[i]] for i in range(len(y_sample))]
+    sample_color = [my_color[y_sample.iloc[i]] for i in range(len(y_sample))]
 
     ### make a dictionary of colors for each 16 cluster in y_cluster. use np.unique(y_cluster)
     ### generate 16 colors using the following code:
     my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_cell_type)}
-    cell_type_color = [my_color[y_cell_type[i]] for i in range(len(y_cell_type))]
+    cell_type_color = [my_color[y_cell_type.iloc[i]] for i in range(len(y_cell_type))]
 
     return {'sample': sample_color, 'cell_type':cell_type_color}
 
@@ -98,17 +98,17 @@ def get_colors_dict_humanKidney(y_sample, y_sex, y_cell_type):
     ### make a dictionary of colors for each sample in y_sample
     my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_sample)}
-    sample_color = [my_color[y_sample[i]] for i in range(len(y_sample))]
+    sample_color = [my_color[y_sample.iloc[i]] for i in range(len(y_sample))]
 
     ### make a dictionary of colors for each strain in y_strain
     my_color = {'Male': 'forestgreen', 'Female': 'hotpink'}
-    sex_color = [my_color[y_sex[i]] for i in range(len(y_sex))]
+    sex_color = [my_color[y_sex.iloc[i]] for i in range(len(y_sex))]
 
     ### make a dictionary of colors for each 16 cluster in y_cluster. use np.unique(y_cluster)
     ### generate 16 colors using the following code:
     my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_cell_type)}
-    cell_type_color = [my_color[y_cell_type[i]] for i in range(len(y_cell_type))]
+    cell_type_color = [my_color[y_cell_type.iloc[i]] for i in range(len(y_cell_type))]
 
     return {'sample': sample_color, 'sex':sex_color, 'cell_type':cell_type_color}
 
@@ -124,17 +124,17 @@ def get_colors_dict_humanPBMC(y_sample, y_stim, y_cell_type):
      ### make a dictionary of colors for each sample in y_sample
      my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_sample)}
-     sample_color = [my_color[y_sample[i]] for i in range(len(y_sample))]
+     sample_color = [my_color[y_sample.iloc[i]] for i in range(len(y_sample))]
 
      ### make a dictionary of colors for each strain in y_strain
      my_color = {'stim': 'red', 'ctrl': 'blue'}
-     stim_color = [my_color[y_stim[i]] for i in range(len(y_stim))]
+     stim_color = [my_color[y_stim.iloc[i]] for i in range(len(y_stim))]
 
      ### make a dictionary of colors for each 16 cluster in y_cluster. use np.unique(y_cluster)
      ### generate 16 colors using the following code:
      my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
                         for i in np.unique(y_cell_type)}
-     cell_type_color = [my_color[y_cell_type[i]] for i in range(len(y_cell_type))]
+     cell_type_color = [my_color[y_cell_type.iloc[i]] for i in range(len(y_cell_type))]
 
      return {'sample': sample_color, 'stim':stim_color, 'cell_type':cell_type_color}
 

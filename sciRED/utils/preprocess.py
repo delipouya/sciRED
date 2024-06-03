@@ -91,9 +91,10 @@ def get_binary_covariate(covariate_vec, covariate_level) -> np.array:
     covariate_level: one level of the covariate
     '''
     covariate_list = np.zeros((len(covariate_vec)))
+    
     for i in range(len(covariate_vec)):
         ### select the ith element of 
-        if covariate_vec[i] == covariate_level:
+        if covariate_vec.iloc[i] == covariate_level:
             covariate_list[i] = 1
     return covariate_list
 
@@ -107,7 +108,6 @@ def get_design_mat(metadata_col, data) -> np.array:
     column_levels = data.obs[metadata_col].unique() 
     dict_covariate = {}
     for column_level in column_levels:
-        print(column_level)
         dict_covariate[column_level] = get_binary_covariate(data.obs[[metadata_col]].squeeze(), column_level)
 
     #### stack colummns of dict_covariate 
