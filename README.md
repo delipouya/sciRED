@@ -44,10 +44,13 @@ Numba needs NumPy 1.24 or less
 ```
 Detailed package version information is provided in the requirements.txt file.
 
+Installation, verified on Linux and Unix systems, takes less than a minute once all dependencies are resolved.
 
 ## Tutorial
 
 Follow [tutorial-1](https://github.com/delipouya/sciRED/blob/main/tutorial1_scMixology.ipynb) and [tutorial-2](https://github.com/delipouya/sciRED/blob/main/tutorial2_stimulatedPBMC.ipynb) to learn how to use sciRED. These tutorials introduce the standard processing pipeline and demonstrate the application of sciRED on the scMixology and stimulated PBMC datasets. Further details about the input datasets are available in the manuscript. The data processing scripts are available in the _data_prep_ folder. 
+
+The input data for Tutorial 1 is provided in the "Data" folder. Instructions for downloading and saving data for Tutorial 2 can be found in the `data_stimPBMC.R` script inside the _data_prep_ folder. The demo for Tutorial 1 took less than a minute to run on a workstation with 24 CPUs and 64 GB RAM.
 
 
 ## Citation
