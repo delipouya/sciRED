@@ -207,8 +207,8 @@ for col in data.obs.columns:
     factor_scores_df[col] = data.obs[col].values
 ### add rownames of data.obs to the factor_scores_df
 factor_scores_df['id'] = data.obs.index.values
-factor_scores_df.to_csv('/home/delaram/sciFA/Results/factor_scores_umap_df_humanlivermap.csv', index=False)
-pd.DataFrame(factor_loading).to_csv('/home/delaram/sciFA/Results/factor_loading_humanlivermap.csv', index=False)
+#factor_scores_df.to_csv('/home/delaram/sciFA/Results/factor_scores_umap_df_humanlivermap.csv', index=False)
+#pd.DataFrame(factor_loading).to_csv('/home/delaram/sciFA/Results/factor_loading_humanlivermap.csv', index=False)
 
 
 
@@ -223,7 +223,6 @@ factor_variance = met.factor_variance(factor_scores)
 
 ## Specificity
 simpson_fcat = met.simpson_diversity_index(fcat)
-
 
 ### label dependent factor metrics
 asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_cell_type, mean_type='arithmetic')
@@ -241,4 +240,40 @@ fist = met.FIST(metrics_dict)
 vis.plot_FIST(fist, title='Scaled metrics for all the factors')
 ### subset the first 15 factors of fist dataframe
 vis.plot_FIST(fist.iloc[0:15,:])
+### include factors F10, F19, F26, F28, F30
+vis.plot_FIST(fist.iloc[[9, 18, 25, 27, 29],:], 
+              x_axis_label=['F10', 'F19', 'F26', 'F28', 'F30'])
 vis.plot_FIST(fist.iloc[matched_factor_index,:])
+
+
+
+################################################################
+########  Creating the FIS table for a subset of factors ########
+################################################################
+#### Bimodality scores
+### subset factor scores to include factors F10, F19, F26, F28, F30
+selected_factors = [9, 18, 25, 27, 29]
+factor_scores_subset = factor_scores[:,selected_factors]
+silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
+bimodality_index = met.bimodality_index(factor_scores)
+bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
+bimodality_score = bimodality_index
+#### Effect size
+factor_variance = met.factor_variance(factor_scores)
+
+## Specificity
+simpson_fcat = met.simpson_diversity_index(fcat)
+
+### label dependent factor metrics
+asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_cell_type, mean_type='arithmetic')
+asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
+
+
+########### create factor-interpretibility score table (FIST) ######
+metrics_dict = {'Bimodality':bimodality_score, 
+                    'Specificity':simpson_fcat,
+                    'Effect size': factor_variance,
+                    'Homogeneity (cell type)':asv_cell_type,
+                    'Homogeneity (sample)':asv_sample}
+
+fist = met.FIST(metrics_dict)

@@ -121,6 +121,11 @@ pca_scores_varimax_df_merged = pd.concat([data.obs, pca_scores_varimax_df], axis
 pca_scores_varimax_df_merged.to_csv('~/sciFA/Results/pca_scores_varimax_df_merged_kidneyMap.csv')
 varimax_loading_df.to_csv('~/sciFA/Results/varimax_loading_df_kidneyMap.csv')
 
+### read ~/sciFA/Results/pca_scores_varimax_df_merged_kidneyMap.csv
+pca_scores_varimax_df_merged = pd.read_csv('~/sciFA/Results/pca_scores_varimax_df_merged_kidneyMap.csv')
+#f1_index = pca_scores_varimax_df_merged.columns.get_loc('F1')
+factor_scores = pca_scores_varimax_df_merged.iloc[:, -NUM_COMPONENTS:]
+factor_scores = factor_scores.values
 
 ########################
 ######## PCA factors

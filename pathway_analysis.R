@@ -158,3 +158,41 @@ varimax_df = read.csv('/home/delaram/sciFA/Results/factor_loading_humanlivermap.
 genes = read.csv('/home/delaram/sciFA/Results/genes_humanlivermap.csv')
 df = data.frame(genes= genes$X0,factor=factor_loading$X28)
 varimax_loading_df_ord = df[order(df$factor, decreasing = F),]
+
+
+
+##### Figure-1 example figure
+varimax_loading_vis = data.frame(genes=paste0('Gene ',1:10),factor=10:1/10+rnorm(n=10,mean = 0,sd = 0.02))
+
+varimax_loading_vis$genes <- factor(varimax_loading_vis$genes, levels=varimax_loading_vis$genes)
+ggplot(varimax_loading_vis,aes(x=genes, y=factor, color=factor))+geom_point(size=6,alpha=1.2)+theme_bw()+
+  theme(axis.text.x = element_text(color = "grey20", size = 22, angle = 90, hjust = .5, vjust = .5, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 12, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
+        axis.title.x = element_text(color = "grey20", size = 14, angle = 0, hjust = .5, vjust = 0, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 25, angle = 90, hjust = .5, vjust = .5, face = "plain"),
+        legend.text = element_text(hjust = 1,angle = 0),
+        legend.position="left", legend.direction="vertical")+
+  scale_color_gradient(name='Factor\nLoading')+
+  #scale_colour_gradientn(colours=c("red", "blue"))+
+  scale_color_gradient2(name='',midpoint = 0, low = "deepskyblue2", mid = "white",
+                        high = "midnightblue", space = "Lab" )+
+  ylab('Factor\nLoading')+xlab('')
+
+
+
+enrich_res_pos = data.frame(term_name=paste0('Pathway ',1:8),log_p=8:1/8+rnorm(n=8,mean = 0,sd = 0.05))
+enrich_res_pos$factor[1:4] = enrich_res_pos$factor[1:4]+0.6
+
+enrich_res_pos$term_name <- factor(enrich_res_pos$term_name, 
+                                   levels =  enrich_res_pos$term_name[length(enrich_res_pos$term_name):1])
+
+
+title = ''#'stim'#'Male'
+ggplot(enrich_res_pos, aes(y=term_name,x=log_p))+geom_bar(stat = 'identity',fill='lightskyblue3',color='grey3')+xlab('-log(p value)')+
+  theme_classic()+ylab('')+ggtitle(title)+
+  scale_fill_manual(values = c('grey80'))+
+  theme(axis.text.x = element_text(color = "grey20", size = 13, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 18, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
+        axis.title.x = element_text(color = "grey20", size = 23, angle = 0, hjust = .5, vjust = 0, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 17, angle = 90, hjust = .5, vjust = .5, face = "plain"))
+
