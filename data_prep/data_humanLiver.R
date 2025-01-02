@@ -13,6 +13,53 @@ sum_MT_conuts = colSums(GetAssayData(HumanLiverSeurat, layer = 'counts')[mt_indi
 sum_counts = colSums(GetAssayData(HumanLiverSeurat, layer = 'counts'))
 HumanLiverSeurat[["percent.mt"]]  = sum_MT_conuts/sum_counts
 
+meta_data = HumanLiverSeurat@meta.data
+pca_df = Embeddings(HumanLiverSeurat, 'pca')
+
+
+HumanLiverSeurat <- RunUMAP(HumanLiverSeurat, dims = 1:30, reduction = "pca")
+umap_df = Embeddings(HumanLiverSeurat, 'umap')
+head(HumanLiverSeurat)
+head(umap_df)
+sum(colnames(HumanLiverSeurat) != rownames(umap_df))
+umap_df2 = cbind(umap_df, HumanLiverSeurat@meta.data)
+dim(umap_df2)
+dim(umap_df)
+
+
+library(RColorBrewer)
+num_colors = length(names(table(umap_df2$cell_type)))
+color_palette <- brewer.pal(n = , name = "Set3")
+
+# Generate a 20-color palette from Set3 (or you can use another palette like Paired)
+colors_20 <- brewer.pal(12, "Set3")  # Max 12 colors for Set3, so combine palettes
+colors_20 <- c(colors_20, brewer.pal(8, "Dark2"))  # Combine with another palette
+
+# Visualize
+barplot(rep(1, 20), col = colors_20, border = NA)
+
+my_colors = c('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', 
+              '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22')
+ggplot(umap_df2, aes(x=umap_1, y=umap_2, color=cell_type))+
+  geom_point(size = 1.4, alpha = 0.8) +  # Adjust point size and transparency
+  #scale_color_brewer(palette = "Set1") +  # Use the Set3 color palette
+  scale_color_manual(values = colors_20) +
+  theme_classic() +  # Use a clean thmy_coloeme
+  theme(
+    axis.text.x = element_text(size = 12),  # Make x-axis labels readable
+    axis.text.y = element_text(size = 12),  # Make y-axis labels readable
+    axis.title.x = element_text(size = 14), # Make x-axis title readable
+    axis.title.y = element_text(size = 14), # Make y-axis title readable
+    legend.title = element_text(size = 13), # Make legend title readable
+    legend.text = element_text(size = 11)   # Make legend text readable
+  ) +
+  labs(
+    x = "UMAP Dimension 1",  # Label for x-axis
+    y = "UMAP Dimension 2",  # Label for y-axis
+    color = 'Cell type',#"Sample",      # Legend title
+    #title = "UMAP embedding of unintegrated data"  # Title
+  )
+
 ################################################################
 ################# DO NOT RUN again #####################
 
@@ -29,15 +76,15 @@ annotations=c('Hep1','abT cell','Hep2','infMac','Hep3','Hep4','plasma cell',
               'hepatic stellate cell')
 
 label_df = data.frame(cluster=paste0('cluster_',1:20),labels=annotations)
-Idents(seur) = paste0('cluster_', as.character(seur$res.0.8))
-human_liver_annot = data.frame(umi=colnames(seur), cluster=Idents(seur))
+Idents(HumanLiverSeurat) = paste0('cluster_', as.character(HumanLiverSeurat$res.0.8))
+human_liver_annot = data.frame(umi=colnames(HumanLiverSeurat), cluster=Idents(HumanLiverSeurat))
 human_liver_annot = merge(human_liver_annot, label_df, by.x='cluster', by.y='cluster', all.x=T, sort=F)
 
-human_liver_annot_sorted <- human_liver_annot[match(colnames(seur), human_liver_annot$umi),]
-sum(human_liver_annot_sorted$umi != colnames(seur))
-seur$cell_type = human_liver_annot_sorted$labels
+human_liver_annot_sorted <- human_liver_annot[match(colnames(HumanLiverSeurat), human_liver_annot$umi),]
+sum(human_liver_annot_sorted$umi != colnames(HumanLiverSeurat))
+HumanLiverSeurat$cell_type = human_liver_annot_sorted$labels
 
-seur$sample = unlist(lapply(strsplit(colnames(seur), '_'), '[[', 1))
+HumanLiverSeurat$sample = unlist(lapply(strsplit(colnames(HumanLiverSeurat), '_'), '[[', 1))
 
 SaveH5Seurat(seur, filename ='~/sciFA/Data/HumanLiverAtlas.h5Seurat' ,overwrite = TRUE)
 Convert('~/sciFA/Data/HumanLiverAtlas.h5Seurat', dest = "h5ad")
@@ -225,7 +272,9 @@ ggplot(tsne_df_merged_2, aes(umap_1,umap_2,color=factor_28))+geom_point(alpha=0.
 ###########################################################################
 factor_loading = read.csv('/home/delaram/sciFA/Results/factor_loading_humanlivermap.csv')
 genes = read.csv('/home/delaram/sciFA/Results/genes_humanlivermap.csv')
-df = data.frame(genes= genes$X0,factor=factor_loading$X17)
+colnames(factor_loading) = paste0('F', 1:ncol(factor_loading))
+df = data.frame(genes= genes$X0,factor=factor_loading$F29)
+
 varimax_loading_df_ord = df[order(df$factor, decreasing = F),]
 varimax_loading_vis = head(varimax_loading_df_ord, 20)
 varimax_loading_vis$genes

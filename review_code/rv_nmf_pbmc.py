@@ -5,6 +5,7 @@ import statsmodels.api as sm
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.decomposition import NMF
 from sklearn.pipeline import Pipeline
 
 from sciRED import ensembleFCA as efca
@@ -18,7 +19,6 @@ from sciRED.utils import corr
 from sciRED.examples import ex_preprocess as exproc
 from sciRED.examples import ex_visualize as exvis
 
-import time
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
@@ -31,7 +31,6 @@ data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data 
 y, genes, num_cells, num_genes = proc.get_data_array(data)
 y_sample, y_stim, y_cell_type, y_cluster  = exproc.get_metadata_humanPBMC(data)
 
-
 colors_dict_humanPBMC = exvis.get_colors_dict_humanPBMC(y_sample, y_stim, y_cell_type)
 plt_legend_sample = exvis.get_legend_patch(y_sample, colors_dict_humanPBMC['sample'] )
 plt_legend_stim = exvis.get_legend_patch(y_stim, colors_dict_humanPBMC['stim'] )
@@ -41,65 +40,39 @@ plt_legend_cell_type = exvis.get_legend_patch(y_cell_type, colors_dict_humanPBMC
 #### design matrix - library size only
 x = proc.get_library_design_mat(data, lib_size='nCount_originalexp')
 
-#### design matrix - library size and sample
-#x_sample = proc.get_design_mat(metadata_col='ind', data=data) 
-#x = np.column_stack((data.obs.nCount_originalexp, x_sample)) 
-#x = sm.add_constant(x) ## adding the intercept
-
-### fit GLM to each gene
-glm_fit_dict = glm.poissonGLM(y, x)
-resid_pearson = glm_fit_dict['resid_pearson'] 
-print('pearson residuals: ', resid_pearson.shape) # numpy array of shape (num_genes, num_cells)
-print('y shape: ', y.shape) # (num_cells, num_genes)
-y = resid_pearson.T # (num_cells, num_genes)
-print('y shape: ', y.shape) # (num_cells, num_genes)
-
-
 ####################################
-#### Running PCA on the data ######
+#### Running NMF on the count data ######
 ####################################
-### using pipeline to scale the gene expression data first
+nmf = NMF(n_components=NUM_COMPONENTS, init='nndsvd', random_state=0)
+nmf_scores = nmf.fit_transform(y)
+nmf_loading = nmf.components_
+nmf_loading.shape
 
+factor_loading = nmf_loading
+factor_scores = nmf_scores
 
-start = time.time()
-pipeline = Pipeline([('scaling', StandardScaler()), ('pca', PCA(n_components=NUM_COMPONENTS))])
-pca_scores = pipeline.fit_transform(y)
-pca = pipeline.named_steps['pca']
-pca_loading = pca.components_ 
-
-
-rotation_results_varimax = rot.varimax(pca_loading.T)
-varimax_loading = rotation_results_varimax['rotloading']
-pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
-end = time.time()
-print('Time to fit sciRED - numcomp '+ str(NUM_COMPONENTS)+ ' : ', end-start)
-print('Time to fit sciRED (min) - numcomp '+ str(NUM_COMPONENTS)+ ' : ', (end-start)/60)
-
-
-plt.plot(pca.explained_variance_ratio_)
-pca_loading.shape #(factors, genes)
-
+NUM_COMP_TO_VIS = 10
 ### make a dictionary of colors for each sample in y_sample
-vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
+vis.plot_pca(factor_scores, NUM_COMP_TO_VIS, 
              cell_color_vec= colors_dict_humanPBMC['cell_type'],
                legend_handles=True,
-               title='PCA of gene expression data',
+               title='NMF factors on count data',
                plt_legend_list=plt_legend_cell_type)
 
-vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
+vis.plot_pca(factor_scores, NUM_COMP_TO_VIS, 
              cell_color_vec= colors_dict_humanPBMC['stim'],
                legend_handles=True,
-               title='PCA of gene expression data',
+               title='NMF factors on count data',
                plt_legend_list=plt_legend_stim)
 
-vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
+vis.plot_pca(factor_scores, NUM_COMP_TO_VIS, 
              cell_color_vec= colors_dict_humanPBMC['sample'],
                legend_handles=True,
-               title='PCA of gene expression data',
+               title='NMF factors on count data',
                plt_legend_list=plt_legend_sample)
 
 #### plot the loadings of the factors
-vis.plot_factor_loading(pca_loading.T, genes, 0, 1, fontsize=10, 
+vis.plot_factor_loading(nmf_loading.T, genes, 0, 1, fontsize=10, 
                     num_gene_labels=2,
                     title='Scatter plot of the loading vectors', 
                     label_x=True, label_y=True)
@@ -109,62 +82,27 @@ vis.plot_factor_loading(pca_loading.T, genes, 0, 1, fontsize=10,
 ####################################
 #### Matching between factors and covariates ######
 ####################################
-
-######## Applying varimax rotation to the factor scores
-rotation_results_varimax = rot.varimax(pca_loading.T)
-varimax_loading = rotation_results_varimax['rotloading']
-pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
-
-title = 'Varimax PCA of pearson residuals'
-vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['sample'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_sample)
-
-vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['cell_type'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_cell_type)
-
-vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['stim'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_stim)
-
-
-varimax_loading_df = pd.DataFrame(varimax_loading)
-varimax_loading_df.columns = ['F'+str(i) for i in range(1, varimax_loading_df.shape[1]+1)]
-varimax_loading_df.index = genes
-
-
-### save the varimax_loading_df and varimax_scores to a csv file
-pca_scores_varimax_df = pd.DataFrame(pca_scores_varimax)
-pca_scores_varimax_df.columns = ['F'+str(i) for i in range(1, pca_scores_varimax_df.shape[1]+1)]
-pca_scores_varimax_df.index = data.obs.index.values
-pca_scores_varimax_df_merged = pd.concat([data.obs, pca_scores_varimax_df], axis=1)
-pca_scores_varimax_df_merged.to_csv('~/sciFA/Results/pca_scores_varimax_df_merged_lupusPBMC.csv')
-varimax_loading_df.to_csv('~/sciFA/Results/varimax_loading_df_lupusPBMC.csv')
-
-
-########################
-######## PCA factors
-factor_loading = pca_loading
-factor_scores = pca_scores
-
-##### Varimax factors
-factor_loading = rotation_results_varimax['rotloading']
-factor_scores = pca_scores_varimax
+######## NMF factors
+factor_loading = nmf_loading
+factor_scores = nmf_scores
 covariate_vec = y_stim
 covariate_level = np.unique(covariate_vec)[1]
 
-########################
-### read the varimax_loading_df and varimax_scores from a csv file
-varimax_loading_df = pd.read_csv('../Results/varimax_loading_df_lupusPBMC.csv', index_col=0)
-pca_scores_varimax_df = pd.read_csv('../Results/pca_scores_varimax_df_merged_lupusPBMC.csv', index_col=0)
-pca_scores_varimax_df = pca_scores_varimax_df.iloc[:,8:] ### remove the first column 8 of the dataframes
+
+nmf_loading_df = pd.DataFrame(nmf_loading)
+nmf_loading_df = nmf_loading_df.T
+nmf_loading_df.columns = ['F'+str(i) for i in range(1, nmf_loading_df.shape[1]+1)]
+nmf_loading_df.index = genes
+
+
+### save to csv file
+nmf_scores_df = pd.DataFrame(nmf_scores)
+nmf_scores_df.columns = ['F'+str(i) for i in range(1, nmf_scores_df.shape[1]+1)]
+nmf_scores_df.index = data.obs.index.values
+nmf_scores_df_merged = pd.concat([data.obs, nmf_scores_df], axis=1)
+nmf_scores_df_merged.to_csv('/home/delaram/sciRED/review_analysis/NMF_scores_df_merged_lupusPBMC.csv')
+nmf_loading_df.to_csv('/home/delaram/sciRED/review_analysis/NMF_loading_df_lupusPBMC.csv')
+
 
 
 ####################################
@@ -179,11 +117,14 @@ fcat_cell_type = efca.FCAT(y_cell_type, factor_scores, scale='standard', mean='a
 
 ### concatenate FCAT table for protocol and cell line
 fcat = pd.concat([fcat_sample, fcat_stim, fcat_cell_type], axis=0)
+
+fcat = pd.concat([fcat_stim, fcat_cell_type], axis=0)
+fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
+
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
 
-fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
 
 ### using Otsu's method to calculate the threshold
 threshold = efca.get_otsu_threshold(fcat.values.flatten())
@@ -235,9 +176,9 @@ stim_fcat_sorted_scores, stim_factors_sorted = vis.plot_sorted_factor_FCA_scores
 
 ####################################
 #### Bimodality scores
-silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
+#silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
 bimodality_index = met.bimodality_index(factor_scores)
-bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
+#bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
 bimodality_score = bimodality_index
 #### Effect size
 factor_variance = met.factor_variance(factor_scores)

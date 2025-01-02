@@ -18,39 +18,92 @@ from sciRED.utils import corr
 from sciRED.examples import ex_preprocess as exproc
 from sciRED.examples import ex_visualize as exvis
 
-import time
+from scipy.io import mmread
+import scipy.sparse as sp
+from scipy.sparse import load_npz
+import random
 
 np.random.seed(10)
 NUM_COMPONENTS = 30
 NUM_GENES = 2000
+#NUM_GENES = 10000
 NUM_COMP_TO_VIS = 5
 
-data_file_path = '/home/delaram/sciFA/Data/PBMC_Lupus_Kang8vs8_data.h5ad'
-data = exproc.import_AnnData(data_file_path)
-data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data to num_genes HVGs
-y, genes, num_cells, num_genes = proc.get_data_array(data)
-y_sample, y_stim, y_cell_type, y_cluster  = exproc.get_metadata_humanPBMC(data)
+metadata_path = "/home/delaram/sciRED//review_analysis/PBMC10K_3p5p_metadata_complete.csv"
+matrix_path = "/home/delaram//sciRED/review_analysis/PBMC10K_3p5p_matrix.npz"
+row_names_path = "/home/delaram//sciRED/review_analysis/PBMC10K_3p5p_row_names.csv"
+col_names_path = "/home/delaram//sciRED/review_analysis/PBMC10K_3p5p_col_names.csv"
+
+sparse_matrix = sp.load_npz(matrix_path)
+data = sparse_matrix.toarray()
+metadata = pd.read_csv(metadata_path)
+row_names = pd.read_csv(row_names_path, header=None).squeeze()  # Row names (genes)
+col_names = pd.read_csv(col_names_path, header=None).squeeze()  # Column names (cells)
+genes = row_names[1:]
+cells = col_names[1:] 
+
+print("Matrix shape:", sparse_matrix.shape)  # Sparse matrix shape
+print(data.shape)  # Print the shape of the sparse matrix
+print(metadata.head())
 
 
-colors_dict_humanPBMC = exvis.get_colors_dict_humanPBMC(y_sample, y_stim, y_cell_type)
-plt_legend_sample = exvis.get_legend_patch(y_sample, colors_dict_humanPBMC['sample'] )
-plt_legend_stim = exvis.get_legend_patch(y_stim, colors_dict_humanPBMC['stim'] )
-plt_legend_cell_type = exvis.get_legend_patch(y_cell_type, colors_dict_humanPBMC['cell_type'] )
+### subset data based on non-zero gene sums and cell sums 
+gene_sums = np.sum(data,axis=1) # row sums - library size
+cell_sums = np.sum(data,axis=0) # col sums - sum reads in a gene
+data = data[gene_sums != 0,:]
+data = data[:,cell_sums != 0]
 
+## subset the metadata based non-zero cell sums
+metadata = metadata.loc[cell_sums != 0]
+
+print(data.shape)
+
+### calculate the variance for each gene
+gene_vars = np.var(data, axis=1)
+### select the top num_genes genes with the highest variance
+gene_idx = np.argsort(gene_vars)[-NUM_GENES:]
+
+#### select num_genes genes based on variance
+## sort the gene_idx in ascending order
+gene_idx = np.sort(gene_idx)
+data = data[gene_idx,:]
+
+
+### extract metadata sample_name as sample
+y_sample = metadata['data']
+y_celltype = metadata['predicted.id']
+y_library_size = metadata['nCount_RNA']
+num_genes, num_cells = data.shape
+
+gene_sums = np.sum(data,axis=1) # row sums - library size
+cell_sums = np.sum(data,axis=0) # col sums - sum reads in a gene
+
+print(data.shape)
+print(len(gene_sums))
+print(len(cell_sums))
+
+data = data.T #num cells, num genes
 
 #### design matrix - library size only
-x = proc.get_library_design_mat(data, lib_size='nCount_originalexp')
+x = y_library_size
+## adding the intercept
+x = sm.add_constant(x) ## adding the intercept
 
 #### design matrix - library size and sample
-#x_sample = proc.get_design_mat(metadata_col='ind', data=data) 
-#x = np.column_stack((data.obs.nCount_originalexp, x_sample)) 
-#x = sm.add_constant(x) ## adding the intercept
+column_levels = y_sample.unique() 
+dict_covariate = {}
+for column_level in column_levels:
+    dict_covariate[column_level] = proc.get_binary_covariate(y_sample.squeeze(), column_level)
+#### stack colummns of dict_covariate 
+x_sample = np.column_stack(([dict_covariate[column] for column in column_levels]))
+
+x = np.column_stack((y_library_size, x_sample)) 
+x = sm.add_constant(x) ## adding the intercept
 
 ### fit GLM to each gene
-glm_fit_dict = glm.poissonGLM(y, x)
+glm_fit_dict = glm.poissonGLM(data, x)
 resid_pearson = glm_fit_dict['resid_pearson'] 
 print('pearson residuals: ', resid_pearson.shape) # numpy array of shape (num_genes, num_cells)
-print('y shape: ', y.shape) # (num_cells, num_genes)
 y = resid_pearson.T # (num_cells, num_genes)
 print('y shape: ', y.shape) # (num_cells, num_genes)
 
@@ -59,44 +112,36 @@ print('y shape: ', y.shape) # (num_cells, num_genes)
 #### Running PCA on the data ######
 ####################################
 ### using pipeline to scale the gene expression data first
-
-
-start = time.time()
 pipeline = Pipeline([('scaling', StandardScaler()), ('pca', PCA(n_components=NUM_COMPONENTS))])
 pca_scores = pipeline.fit_transform(y)
 pca = pipeline.named_steps['pca']
 pca_loading = pca.components_ 
-
-
-rotation_results_varimax = rot.varimax(pca_loading.T)
-varimax_loading = rotation_results_varimax['rotloading']
-pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
-end = time.time()
-print('Time to fit sciRED - numcomp '+ str(NUM_COMPONENTS)+ ' : ', end-start)
-print('Time to fit sciRED (min) - numcomp '+ str(NUM_COMPONENTS)+ ' : ', (end-start)/60)
-
+pca_loading.shape #(factors, genes)
 
 plt.plot(pca.explained_variance_ratio_)
-pca_loading.shape #(factors, genes)
+
+
+my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]) 
+            for i in np.unique(y_celltype)}
+cluster_color = [my_color[y_celltype.iloc[i]] for i in range(len(y_celltype))]
+
+my_color = {i: "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]) 
+            for i in np.unique(y_sample)}
+sample_color = [my_color[y_sample.iloc[i]] for i in range(len(y_sample))]
+
+#plt_legend_sample = exvis.get_legend_patch(y_sample, colors_dict_humanPBMC['sample'] )
 
 ### make a dictionary of colors for each sample in y_sample
 vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
-             cell_color_vec= colors_dict_humanPBMC['cell_type'],
-               legend_handles=True,
-               title='PCA of gene expression data',
-               plt_legend_list=plt_legend_cell_type)
+             cell_color_vec= cluster_color,
+               legend_handles=False,
+               title='PCA of 3p and 5p PBMC - cell type')
 
 vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
-             cell_color_vec= colors_dict_humanPBMC['stim'],
-               legend_handles=True,
-               title='PCA of gene expression data',
-               plt_legend_list=plt_legend_stim)
+             cell_color_vec= sample_color,
+               legend_handles=False,
+               title='PCA of 3p and 5p PBMC - sample')
 
-vis.plot_pca(pca_scores, NUM_COMP_TO_VIS, 
-             cell_color_vec= colors_dict_humanPBMC['sample'],
-               legend_handles=True,
-               title='PCA of gene expression data',
-               plt_legend_list=plt_legend_sample)
 
 #### plot the loadings of the factors
 vis.plot_factor_loading(pca_loading.T, genes, 0, 1, fontsize=10, 
@@ -115,38 +160,36 @@ rotation_results_varimax = rot.varimax(pca_loading.T)
 varimax_loading = rotation_results_varimax['rotloading']
 pca_scores_varimax = rot.get_rotated_scores(pca_scores, rotation_results_varimax['rotmat'])
 
-title = 'Varimax PCA of pearson residuals'
-vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['sample'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_sample)
 
+#make the title to two lines: 'varimax-PCA of pearson res- dorso lateral cortex data - cluster'
+NUM_COMP_TO_VIS = 4
 vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['cell_type'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_cell_type)
+             cell_color_vec= cluster_color,
+               legend_handles=False,
+               title='varimax-PCA of pearson residuals\n 3p and 5p PBMC - cell type')
 
-vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS, 
-               cell_color_vec= colors_dict_humanPBMC['stim'],
-               legend_handles=True,
-               title=title,
-               plt_legend_list=plt_legend_stim)
-
+vis.plot_pca(pca_scores_varimax, NUM_COMP_TO_VIS,
+              cell_color_vec= sample_color,
+                legend_handles=False,
+                title='varimax-PCA of pearson residuals\n 3p and 5p PBMC - sample')
 
 varimax_loading_df = pd.DataFrame(varimax_loading)
 varimax_loading_df.columns = ['F'+str(i) for i in range(1, varimax_loading_df.shape[1]+1)]
-varimax_loading_df.index = genes
+varimax_loading_df.index = genes[gene_idx]
 
 
 ### save the varimax_loading_df and varimax_scores to a csv file
 pca_scores_varimax_df = pd.DataFrame(pca_scores_varimax)
 pca_scores_varimax_df.columns = ['F'+str(i) for i in range(1, pca_scores_varimax_df.shape[1]+1)]
-pca_scores_varimax_df.index = data.obs.index.values
-pca_scores_varimax_df_merged = pd.concat([data.obs, pca_scores_varimax_df], axis=1)
-pca_scores_varimax_df_merged.to_csv('~/sciFA/Results/pca_scores_varimax_df_merged_lupusPBMC.csv')
-varimax_loading_df.to_csv('~/sciFA/Results/varimax_loading_df_lupusPBMC.csv')
+if pca_scores_varimax_df.shape[0] == metadata.shape[0]:
+    pca_scores_varimax_df_merged = pd.concat([metadata.reset_index(drop=True), pca_scores_varimax_df.reset_index(drop=True)], axis=1)
+else:
+    raise ValueError("Number of rows in 'metadata' does not match 'pca_scores_varimax_df'.")
+pca_scores_varimax_df_merged.head()
+
+### save the varimax_loading_df and varimax_scores to a csv file
+varimax_loading_df.to_csv('/home/delaram/sciRED//review_analysis/varimax_loading_df_3p_5p_PBMC.csv')
+pca_scores_varimax_df_merged.to_csv('/home/delaram/sciRED//review_analysis//pca_scores_varimax_df_3p_5p_PBMC.csv')
 
 
 ########################
@@ -157,15 +200,8 @@ factor_scores = pca_scores
 ##### Varimax factors
 factor_loading = rotation_results_varimax['rotloading']
 factor_scores = pca_scores_varimax
-covariate_vec = y_stim
+covariate_vec = y_celltype
 covariate_level = np.unique(covariate_vec)[1]
-
-########################
-### read the varimax_loading_df and varimax_scores from a csv file
-varimax_loading_df = pd.read_csv('../Results/varimax_loading_df_lupusPBMC.csv', index_col=0)
-pca_scores_varimax_df = pd.read_csv('../Results/pca_scores_varimax_df_merged_lupusPBMC.csv', index_col=0)
-pca_scores_varimax_df = pca_scores_varimax_df.iloc[:,8:] ### remove the first column 8 of the dataframes
-
 
 ####################################
 #### FCAT score calculation ######
@@ -173,12 +209,11 @@ pca_scores_varimax_df = pca_scores_varimax_df.iloc[:,8:] ### remove the first co
 
 ### FCAT needs to be calculated for each covariate separately
 fcat_sample = efca.FCAT(y_sample, factor_scores, scale='standard', mean='arithmatic')
-fcat_stim = efca.FCAT(y_stim, factor_scores, scale='standard', mean='arithmatic')
-fcat_cell_type = efca.FCAT(y_cell_type, factor_scores, scale='standard', mean='arithmatic')
+fcat_cluster = efca.FCAT(y_celltype, factor_scores, scale='standard', mean='arithmatic')
 
 
 ### concatenate FCAT table for protocol and cell line
-fcat = pd.concat([fcat_sample, fcat_stim, fcat_cell_type], axis=0)
+fcat = pd.concat([fcat_sample, fcat_cluster], axis=0)
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=20, y_axis_fontsize=20, title_fontsize=22,
               x_axis_tick_fontsize=32, y_axis_tick_fontsize=34)
@@ -212,33 +247,45 @@ x_labels_matched = fcat_matched.columns.values
 vis.plot_FCAT(fcat_matched, x_axis_label=x_labels_matched, title='', color='coolwarm',
                                  x_axis_fontsize=40, y_axis_fontsize=39, title_fontsize=40,
                                  x_axis_tick_fontsize=36, y_axis_tick_fontsize=38, 
-                                 save=False, save_path='../Plots/mean_importance_df_matched_PBMC.pdf')
+                                 save=False, save_path='../Plots/mean_importance_df_matched_3p_5p_PBMC.pdf')
 
-factor_libsize_correlation = corr.get_factor_libsize_correlation(factor_scores, library_size = data.obs.nCount_originalexp)
+factor_libsize_correlation = corr.get_factor_libsize_correlation(factor_scores, library_size = y_library_size)
 vis.plot_factor_cor_barplot(factor_libsize_correlation, 
              title='Correlation of factors with library size', 
              y_label='Correlation', x_label='Factors')
 
 
 ### concatenate FCAT table for protocol and cell line
-fcat = pd.concat([fcat_stim, fcat_cell_type], axis=0)
+fcat = pd.concat([fcat_cluster], axis=0)
 fcat = fcat[fcat.index != 'NA'] ### remove the rownames called NA from table
 
 vis.plot_FCAT(fcat, title='', color='coolwarm',
               x_axis_fontsize=40, y_axis_fontsize=39, title_fontsize=40,
               x_axis_tick_fontsize=36, y_axis_tick_fontsize=40, 
-              save=False, save_path='../Plots/mean_importance_df_matched_PBMC.pdf')
+              save=False, save_path='../Plots/mean_importance_df_matched_3p_5p_PBMC.pdf')
 
 
-stim_fcat_sorted_scores, stim_factors_sorted = vis.plot_sorted_factor_FCA_scores(fcat, 'stim')
+#cluster_fcat_sorted_scores, cluster_factors_sorted = vis.plot_sorted_factor_FCA_scores(fcat, 'cluster')
+
+### select the factors that are matched with any covariate level
+matched_factor_index = np.where(matched_factor_dist>0)[0] 
+fcat_matched = fcat.iloc[:,matched_factor_index] 
+x_labels_matched = fcat_matched.columns.values
+vis.plot_FCAT(fcat_matched, x_axis_label=x_labels_matched, title='', color='coolwarm',
+                                 x_axis_fontsize=40, y_axis_fontsize=39, title_fontsize=40,
+                                 x_axis_tick_fontsize=36, y_axis_tick_fontsize=38, 
+                                 save=False, save_path='../Plots/mean_importance_df_matched_3p_5p_PBMC.pdf')
 
 
 ####################################
 #### Bimodality scores
 silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
+
+
 bimodality_index = met.bimodality_index(factor_scores)
-bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
 bimodality_score = bimodality_index
+
+#bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
 #### Effect size
 factor_variance = met.factor_variance(factor_scores)
 
@@ -246,8 +293,7 @@ factor_variance = met.factor_variance(factor_scores)
 simpson_fcat = met.simpson_diversity_index(fcat)
 
 ### label dependent factor metrics
-asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_cell_type, mean_type='arithmetic')
-asv_stim = met.average_scaled_var(factor_scores, covariate_vector=y_stim, mean_type='arithmetic')
+asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_celltype, mean_type='arithmetic')
 asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
 
 
@@ -256,7 +302,6 @@ metrics_dict = {'Bimodality':bimodality_score,
                     'Specificity':simpson_fcat,
                     'Effect size': factor_variance,
                     'Homogeneity (cell type)':asv_cell_type,
-                    "Homogeneity (stimulated)":asv_stim,
                     'Homogeneity (sample)':asv_sample}
 
 fist = met.FIST(metrics_dict)
@@ -264,4 +309,8 @@ vis.plot_FIST(fist, title='Scaled metrics for all the factors')
 ### subset the first 15 factors of fist dataframe
 vis.plot_FIST(fist.iloc[0:15,:])
 vis.plot_FIST(fist.iloc[matched_factor_index,:])
+
+
+
+
 

@@ -18,10 +18,10 @@ from sciRED.utils import visualize as vis
 from sciRED.utils import corr
 from sciRED.examples import ex_preprocess as exproc
 from sciRED.examples import ex_visualize as exvis
-
+import time
 
 np.random.seed(10)
-NUM_COMPONENTS = 30
+NUM_COMPONENTS = 10
 NUM_GENES = 2000
 NUM_COMP_TO_VIS = 5
 
@@ -54,6 +54,8 @@ x_protocol = proc.get_design_mat(metadata_col='protocol', data=data)
 x = np.column_stack((data.obs.nCount_originalexp, x_protocol)) 
 x = sm.add_constant(x) ## adding the intercept
 
+
+start = time.time()
 glm_fit_dict = glm.poissonGLM(y, x)
 resid_pearson = glm_fit_dict['resid_pearson'] 
 print('pearson residuals: ', resid_pearson.shape) # numpy array of shape (num_genes, num_cells)
@@ -71,7 +73,11 @@ pca_scores = pipeline.fit_transform(y)
 pca = pipeline.named_steps['pca']
 pca_loading = pca.components_
 pca_loading.shape
-plt.plot(pca.explained_variance_ratio_)
+#plt.plot(pca.explained_variance_ratio_)
+
+end = time.time()
+print('Time taken: ', end - start)
+print('time taken (min): ', (end - start)/60) 
 
 
 title = 'PCA of pearson residuals - lib size/protocol removed'
@@ -222,6 +228,22 @@ factor_scores = pca_scores_varimax
 ##### Experiment-3: Promax factors
 factor_loading = rotation_results_promax['rotloading']
 factor_scores = pca_scores_promax
+
+
+
+
+#### save varimax loading and scores to a csv file
+varimax_loading_df = pd.DataFrame(varimax_loading)
+varimax_loading_df.columns = ['F'+str(i) for i in range(1, varimax_loading_df.shape[1]+1)]
+varimax_loading_df.index = genes
+varimax_loading_df.to_csv('/home/delaram/sciRED//review_analysis/benchmark_methods/sciRED_loading_scMix_numcomp_'+str(NUM_COMPONENTS)+'.csv')
+
+pca_scores_varimax_df = pd.DataFrame(pca_scores_varimax)
+pca_scores_varimax_df.columns = ['F'+str(i) for i in range(1, pca_scores_varimax_df.shape[1]+1)]
+pca_scores_varimax_df.index = data.obs.index.values
+pca_scores_varimax_df_merged = pd.concat([data.obs.reset_index(drop=True), pca_scores_varimax_df.reset_index(drop=True)], axis=1)
+pca_scores_varimax_df_merged.to_csv('/home/delaram/sciRED//review_analysis/benchmark_methods/sciRED_scores_scMix_numcomp_'+str(NUM_COMPONENTS)+'.csv')
+
 
 ####################################
 #### FCAT score calculation ######

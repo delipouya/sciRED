@@ -115,7 +115,7 @@ ggplot(varimax_loading_vis,aes(x=genes, y=factor, color=factor))+geom_point(size
 ########################    stimulated PBMC Map ###########################
 ####################################################################################
 varimax_df = read.csv('~/sciFA/Results/varimax_loading_df_lupusPBMC.csv')
-df = data.frame(gene= varimax_df$X,factor=varimax_df$F2)
+df = data.frame(gene= varimax_df$X,factor=varimax_df$F1)
 df_pos = df[order(df$factor, decreasing = T),]
 num_genes = 200
 

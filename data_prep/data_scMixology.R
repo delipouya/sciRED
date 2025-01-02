@@ -17,7 +17,7 @@ set.seed(5252)
 ############### Merging the 3cl data to be imported to python #############
 ###########################################################################
 
-load("~/sciFA/data/sincell_with_class.RData") ## 3 cell line data
+load("~/scLMM/sc_mixology/data//sincell_with_class.RData") ## 3 cell line data
 #sce10x_qc contains the read counts after quality control processing from the 10x platform. 
 #sce4_qc contains the read counts after quality control processing from the CEL-seq2 platform. 
 #scedrop_qc_qc contains the read counts after quality control proessing from the Drop-seq platform.

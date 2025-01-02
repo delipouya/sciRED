@@ -28,7 +28,6 @@ data_file_path =  '/home/delaram/sciFA/Data/HumanLiverAtlas.h5ad'
 data = exproc.import_AnnData(data_file_path)
 data, gene_idx = proc.get_sub_data(data, num_genes=NUM_GENES) # subset the data to num_genes HVGs
 
-
 y, genes, num_cells, num_genes = proc.get_data_array(data)
 
 #pd.DataFrame(genes).to_csv('/home/delaram/sciFA/Results/genes_humanlivermap.csv', index=False)
@@ -210,7 +209,12 @@ factor_scores_df['id'] = data.obs.index.values
 #factor_scores_df.to_csv('/home/delaram/sciFA/Results/factor_scores_umap_df_humanlivermap.csv', index=False)
 #pd.DataFrame(factor_loading).to_csv('/home/delaram/sciFA/Results/factor_loading_humanlivermap.csv', index=False)
 
-
+### read the factor scores dataframe
+factor_scores_df = pd.read_csv('/home/delaram/sciFA/Results/factor_scores_umap_df_humanlivermap.csv')
+### select columns that start with factor_
+pattern_cols = [col for col in factor_scores_df.columns if 'factor_' in col]
+factor_scores_df_factor = factor_scores_df[pattern_cols]
+factor_scores = factor_scores_df_factor.values
 
 ####################################
 #### Bimodality scores
@@ -240,33 +244,41 @@ fist = met.FIST(metrics_dict)
 vis.plot_FIST(fist, title='Scaled metrics for all the factors')
 ### subset the first 15 factors of fist dataframe
 vis.plot_FIST(fist.iloc[0:15,:])
-### include factors F10, F19, F26, F28, F30
-vis.plot_FIST(fist.iloc[[9, 18, 25, 27, 29],:], 
-              x_axis_label=['F10', 'F19', 'F26', 'F28', 'F30'])
+### include factors F10, F19, F26, F29, F30
+vis.plot_FIST(fist.iloc[[9, 18, 25, 28, 29],:], 
+              x_axis_label=['F10', 'F19', 'F26', 'F29', 'F30'])
 vis.plot_FIST(fist.iloc[matched_factor_index,:])
 
 
 
+### read the factor scores dataframe
+factor_scores_df = pd.read_csv('/home/delaram/sciFA/Results/factor_scores_umap_df_humanlivermap.csv')
+### select columns that start with factor_
+pattern_cols = [col for col in factor_scores_df.columns if 'factor_' in col]
+factor_scores_df_factor = factor_scores_df[pattern_cols]
+factor_scores = factor_scores_df_factor.values
 ################################################################
 ########  Creating the FIS table for a subset of factors ########
 ################################################################
 #### Bimodality scores
-### subset factor scores to include factors F10, F19, F26, F28, F30
-selected_factors = [9, 18, 25, 27, 29]
+### subset factor scores to include factors F10, F19, F26, F29, F30
+selected_factors = [9, 18, 25, 27, 28, 29]
 factor_scores_subset = factor_scores[:,selected_factors]
-silhouette_score = met.kmeans_bimodal_score(factor_scores, time_eff=True)
-bimodality_index = met.bimodality_index(factor_scores)
-bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
+#silhouette_score = met.kmeans_bimodal_score(factor_scores_subset, time_eff=True)
+bimodality_index = met.bimodality_index(factor_scores_subset)
+#bimodality_score = np.mean([silhouette_score, bimodality_index], axis=0)
 bimodality_score = bimodality_index
 #### Effect size
-factor_variance = met.factor_variance(factor_scores)
+factor_variance = met.factor_variance(factor_scores_subset)
 
 ## Specificity
-simpson_fcat = met.simpson_diversity_index(fcat)
+### subset the FCAT scores to include the selected factors
+fcat_subset = fcat.iloc[:,selected_factors]
+simpson_fcat = met.simpson_diversity_index(fcat_subset)
 
 ### label dependent factor metrics
-asv_cell_type = met.average_scaled_var(factor_scores, covariate_vector=y_cell_type, mean_type='arithmetic')
-asv_sample = met.average_scaled_var(factor_scores, y_sample, mean_type='arithmetic')
+asv_cell_type = met.average_scaled_var(factor_scores_subset, covariate_vector=y_cell_type, mean_type='arithmetic')
+asv_sample = met.average_scaled_var(factor_scores_subset, y_sample, mean_type='arithmetic')
 
 
 ########### create factor-interpretibility score table (FIST) ######
@@ -277,3 +289,4 @@ metrics_dict = {'Bimodality':bimodality_score,
                     'Homogeneity (sample)':asv_sample}
 
 fist = met.FIST(metrics_dict)
+vis.plot_FIST(fist, x_axis_label=['F10', 'F19', 'F26','F28' ,'F29', 'F30'])
