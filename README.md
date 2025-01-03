@@ -56,7 +56,8 @@ The input data for Tutorial 1 is provided in the "Data" folder. Instructions for
 ## Citation
 
 If you find sciRED useful for your publication, please cite:
-[Pouyabahar et al. Interpretable single-cell factor decomposition using sciRED.](https://www.biorxiv.org/content/10.1101/2024.08.01.605536v1)
+[Pouyabahar et al. Interpretable single-cell factor decomposition using sciRED.](https://www.biorxiv.org/content/10.1101/2024.08.01.605536v2)
+[![DOI](https://zenodo.org/badge/791387168.svg)](https://doi.org/10.5281/zenodo.14593137)
 
 ## Contact
 For questions, please contact Delaram Pouyabahar at: d.pouyabahar@mail.utoronto.ca
