@@ -106,7 +106,7 @@ n <- 30
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 tsne_df_merged_2 = tsne_df_merged[,-c(45:51)]
-#tsne_df_merged_2 = tsne_df_merged
+tsne_df_merged_2 = tsne_df_merged
 
 
 ggplot(tsne_df_merged_2, aes(tSNE_1,tSNE_2,color=CELL_TYPE))+geom_point(size=1.3)+

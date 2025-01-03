@@ -34,13 +34,13 @@ add_emp_pvalue <- function(fcat_df, a_model){
   return(model_fcat_base)
 }
 
-DATASET_NAME = 'pbmc'#'scMix' #humanKidney, humanLiver pbmc
+DATASET_NAME = 'humanKidney'#'scMix' #humanKidney, humanLiver pbmc
 
-file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_single_baseline.csv')
+file_name = paste0('/home/delaram/sciRED/benchmark_datasets//',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_single_baseline.csv')
 fcat_single_base = read.csv(file_name)
 fcat_single_base$type = 'baseline'
 
-dir_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/shuffle/single/')
+dir_name = paste0('/home/delaram/sciRED/benchmark_datasets//',DATASET_NAME,'/shuffle/single/')
 fcat_single_list = lapply(list.files(dir_name, pattern = "fcat_*", full.names = T), read.csv)
 fcat_single_shuffle <- Reduce(rbind,fcat_single_list)
 fcat_single_shuffle$type = 'shuffle'
@@ -146,13 +146,14 @@ ggplot(single_fcat_sum, aes(y=value,x=Var2))+geom_boxplot()+
 ###############################################################################################
 ########################## importance evaluation for model comparison
 ################################################################################################
+DATASET_NAME = 'humanKidney'#'scMix' #humanKidney, humanLiver pbmc
 
-file_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_mean_baseline.csv')
+file_name = paste0('/home/delaram/sciRED/benchmark_datasets//',DATASET_NAME,'/baseline/fcat_',DATASET_NAME,'_mean_baseline.csv')
 fcat_mean_base = read.csv(file_name)
 fcat_mean_base$type = 'baseline'
 head(fcat_mean_base)
 
-dir_name = paste0('/home/delaram/sciRED/benchmark/',DATASET_NAME,'/shuffle/mean/')
+dir_name = paste0('/home/delaram/sciRED/benchmark_datasets//',DATASET_NAME,'/shuffle/mean/')
 fcat_mean_list = lapply(list.files(dir_name, pattern = "fcat_*", full.names = T), read.csv)
 fcat_mean_shuffle <- Reduce(rbind,fcat_mean_list)
 fcat_mean_shuffle$type = 'shuffle'
@@ -238,6 +239,21 @@ ggplot(both_fcat_sum_single, aes(y=value,x=reorder(Var2, value), fill=Var2))+geo
   geom_hline(yintercept=1, color = "red", size=1, linetype="dashed")+
   geom_area(mapping = aes(y = ifelse(value>0 & value< 3 , 1, 0)), fill = "grey70")+
   ggtitle(data_set_name)
+
+
+
+# PBMC wilcoxon
+# AUC p-value=2.4e-0.7; Decision tree=0.021; logistic regression = 2.3e-07; XGB= 7.8e-05
+
+# scMixology
+# AUC=0.0046; decision tree=0.67; logistic regression=0.0046; XGB=0.0058
+
+# human liver map
+# AUC=8.2e-10; decision tree=4e-05; logistic regression=8.3e-10; XGB=2.5e-09
+
+# human kidney map
+# AUC=8.3e-15; decision tree=3.1e-08; logistic regression=8.3e-15; XGB=1.3e-11
+
 
 
 
